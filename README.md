@@ -208,9 +208,9 @@ ohMyGod:
 See Full List of Mixins provided by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L120)
 
 #### BOMBS
-At this point i guess you wanna ask, can we do something more fun/functional? After all, we are using programming language to write a plain text document, so here we go, let see a MAP_SUFFIX BOMB in action:
+At this point i guess you wanna ask, can we do something more fun/functional? After all, we are using programming language to write a plain text document, so here we go, let's see a MAP_SUFFIX BOMB in action:
 
-+ BOMBS are written in UPPER_CASE, use with caution!
++ BOMBS are written in UPPER_CASE, use with CAUTION!
 + MSS.MAP_SUFFIX :: (list_of_suffix, indexMixin) -> (mss) -> mss
     +  list_of_suffix is suffix list concated with `_` just like in mss
     + indexMixin :: (suffix, index) -> (mss) -> mss
