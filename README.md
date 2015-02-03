@@ -1,20 +1,22 @@
-## MSS
-### Write css in functional ways
-
-This library is inspired by clay CSS compiler(haskell), while i'm looking for a better way to write CSS in front end environment (browsers js runtime). actually it's easy and expressive, so let's begin:
+## MSS: Messed up Style Sheet
+Write CSS in a functional way with [LiveScript](http://livescript.net), Inspired by [Clay CSS compiler](http://fvisser.nl/clay/)
 
 ### Warm up
 If you are familiar with [LiveScript](http://livescript.net), you can skip this section.
 
-#### ! and do
-! in LiveScript simplily means apply a function with no argmenuts, do means you want pass a plain object to function, eg(LiveScript => Javascript):
+#### !, do and <|
+`!` in LiveScript means apply a function with no argmenuts, `do` means you want pass a plain object to function, and `<|` stand for back-pipe(borrowed from F#, aka. $ in Haskell), it mean apply the right value to the left function, you can think `<|` put a () to the right expression, eg(LiveScript => Javascript):
 ```
 foo = (bar = 8) -> console.log bar
 foo! 
-
+# will log 8
 foobar do
     a: 1
     b: {c:2}
+
+foo = (x) -> (y) -> console.log x + y
+foo 2 <| 3
+# will log 5
 ```
 =>
 ```
@@ -33,16 +35,6 @@ foobar({
   }
 });
 
-```
-
-#### <|
-<| stand for pipe(borrowed from F#, aka. $ in haskell), it mean apply the right value to the left function, so here we go:
-```
-foo = (x) -> (y) -> console.log x + y
-foo 2 <| 3
-```
-=>
-```
 var foo;
 foo = function(x){
   return function(y){
@@ -52,10 +44,9 @@ foo = function(x){
 foo(2)(3);
 //console will log 5
 ```
-
 ### How does MSS work?
 
-MSS.parse reveive a mss object to output a css string:
+MSS.parse reveive a mss object to output a css string，a mss object is an object tree, a key will be a CSS selector if the value is another mss object, otherwise it will be property name for CSS, the nested selectors will be concated into a descendant selector（with `&` exception borrowed from stylus）, Let's see an example:
 ```
 mss =
     fooClass:
@@ -82,8 +73,9 @@ mss =
   z-index:999;
 }
 ```
+As shown above, the selectors and prop name are converted for the writing  ease in LiveScript(using valid variable as much as possible) 
 
-In another word, a mss object is an object tree, a key will be a CSS selector if the value is another mss object, otherwise it will be property name for CSS, the nested selectors will be concated into a descendant selector, the rules for MSS selectors are:
+Rules for parsing a mss selectors are:
 
 + lowerCaseSelector => .lowerCaseSelector
 + UpperCaseSelector => UpperCaseSelector
