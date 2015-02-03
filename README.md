@@ -3,7 +3,13 @@ Write CSS in a functional way with [LiveScript](http://livescript.net), Inspired
 
 ### How does MSS work?
 
-MSS.parse reveive a mss object to output a css string，a mss object is an object tree, a key will be a CSS selector if the value is another mss object, otherwise it will be property name for CSS, the nested selectors will be concated into a descendant selector（with `&` exception borrowed from stylus）, Let's see an example:
+MSS.parse takes a mss object as input and output a css string
+
++ A mss object is an plain javascript object, usually nested
++ A key will be a CSS selector if its value is another mss object, otherwise it will be take as a property name for CSS
++ MSS will parse the nested object into nested selectors by connnecting selectors into a descendant selector
+
+Let's see an example:
 ```
 mss =
     fooClass:
@@ -14,8 +20,9 @@ mss =
                 borderRadius: '12px'
                 padding: '12px'
                 width: '100%'   
-
-//will generate following CSS
+                
+MSS.parse mss, true
+// set second argmument to true to enable prettify , parse above mss will generate following CSS
 .fooClass #barId input,
 .fooClass .anotherClass input{
   border-radius:12px;
@@ -110,10 +117,10 @@ fooBar:
 }
 ```
 ### Functions and Mixins
-Heres come the fun part, you should know some basic LiveScript syntax, such as `\` create a string literal, `let` create a lambda call, and we will use `!`, `do` and `<|` a lot.
+Here comes the fun part, you should know some basic LiveScript syntax, such as `\` create a string literal, `let` create a lambda call, and we will use `!`, `do` and `<|` a lot.
 #### Warm up, !, do and <|
 If you are familiar with [LiveScript](http://livescript.net), you can skip this section.
-`!` in LiveScript means apply a function with no argmenuts, `do` means you want pass a plain object to function, and `<|` stand for back-pipe(borrowed from F#, aka. $ in Haskell), it mean apply the right value to the left function, you can think `<|` put right expression into a invisible`()`, eg(LiveScript => Javascript):
+`!` in LiveScript means apply a function with no argmenuts, `do` means pass a plain object to a function, and `<|` stand for back-pipe(borrowed from F#, aka. $ in Haskell), it mean apply the right value to the left function, you can think `<|` as it put right expression into a invisible`()`, eg(LiveScript => Javascript):
 ```
 foo = (bar = 8) -> console.log bar
 foo! 
@@ -173,13 +180,13 @@ $OhMyGod:
 See Full List of helper functions provide by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L90)
 
 #### Mixins
-Mixins are special functions, they should take a mss object as argument and return a decorated(modified) mss object, usually Mixins need take more arguments to know how to decorate the mss object, so there'are two kind of Mixins:
+Mixins are special functions, they should take a mss object as argument and return a decorated(modified) mss object, usually Mixins need take more arguments to know how to decorate the mss object, so there're two kinds of Mixins:
 
 + All Mixins are written in MyCamelCase
 + Mixins that dont need extra arguments are end with `$` such as `CenterT$` which simply add `text-align: center` to a mss object
 + Mixins that need extra arguments are curried functions(need append `!` to use default arguments) such as `Border`
-+ Since Mixins are just function with type signature :: mss -> mss, you can add more Mixins by connecting them with `<|`
-+ use `do` after the last `<|` to pass orginal mss object into Mixins
++ Since Mixins are just functions with type signature :: mss -> mss, you can add more Mixins by connecting them with `<|`
++ use `do` after the last `<|` to pass orginal mss object into Mixins or add a `{}` if don't have one
 
 ```
 OhMyGod: MSS.Border 5 \red \LR <| MSS.CenterT$ <| do
@@ -203,7 +210,7 @@ See Full List of Mixins provide by MSS [HERE](https://github.com/winterland1989/
 #### BOMBS
 At this point i guess you wanna ask, can we do something more fun/functional? After all, we are using programming language to write a plain text document, so here we go, let see a MAP_SUFFIX BOMB in action:
 
-+ BOMBS are written in UPPERCASE, use with caution!
++ BOMBS are written in UPPER_CASE, use with caution!
 + MSS.MAP_SUFFIX :: (list_of_suffix, indexMixin) -> (mss) -> mss
     +  list_of_suffix is suffix list concated with `_` just like in mss
     + indexMixin :: (suffix, index) -> (mss) -> mss
