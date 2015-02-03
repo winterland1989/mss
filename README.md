@@ -120,7 +120,7 @@ fooBar:
 Here comes the fun part, you should know some basic LiveScript syntax, such as `\` create a string literal, `let` create a lambda call, and we will use `!`, `do` and `<|` a lot.
 #### Warm up, !, do and <|
 If you are familiar with [LiveScript](http://livescript.net), you can skip this section.
-`!` in LiveScript means apply a function with no argmenuts, `do` means pass a plain object to a function, and `<|` stand for back-pipe(borrowed from F#, aka. $ in Haskell), it mean apply the right value to the left function, you can think `<|` as it put right expression into a invisible`()`, eg(LiveScript => Javascript):
+`!` in LiveScript means apply a function with no arguments, `do` means pass a plain object to a function, and `<|` stand for back-pipe(borrowed from F#, aka. $ in Haskell), it mean apply the right value to the left function, you can think `<|` as it put right expression into a invisible`()`, eg(LiveScript => Javascript):
 ```
 foo = (bar = 8) -> console.log bar
 foo! 
@@ -177,7 +177,7 @@ $OhMyGod:
     padding 10% 10%;
 }
 ```
-See Full List of helper functions provide by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L90)
+See Full List of helper functions provided by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L90)
 
 #### Mixins
 Mixins are special functions, they should take a mss object as argument and return a decorated(modified) mss object, usually Mixins need take more arguments to know how to decorate the mss object, so there're two kinds of Mixins:
@@ -205,7 +205,7 @@ ohMyGod:
 }
 
 ```
-See Full List of Mixins provide by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L120)
+See Full List of Mixins provided by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L120)
 
 #### BOMBS
 At this point i guess you wanna ask, can we do something more fun/functional? After all, we are using programming language to write a plain text document, so here we go, let see a MAP_SUFFIX BOMB in action:
@@ -263,7 +263,7 @@ ohMyGoooood:
     content: 'Dying';
 }
 ```
-See Full List of BOMBS provide by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L247)
+See Full List of BOMBS provided by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L247)
 
 ### Usage 
 I used MSS inside browser without hassels, More Mixins, functions and BOMBS are W.I.P
