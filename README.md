@@ -183,7 +183,7 @@ See Full List of helper functions provided by MSS [HERE](https://github.com/wint
 Mixins are special functions, they should take a mss object as argument and return a decorated(modified) mss object, usually Mixins need take more arguments to know how to decorate the mss object, so there're two kinds of Mixins:
 
 + All Mixins are written in MyCamelCase
-+ Mixins that dont need extra arguments are end with `$` such as `CenterT$` which simply add `text-align: center` to a mss object
++ Mixins that dont need extra arguments are end with `$` such as `CenterT$` which simply add `textAlign: center` to a mss object(thus add `text-align: center` to the final CSS)
 + Mixins that need extra arguments are curried functions(need append `!` to use default arguments) such as `Border`
 + Since Mixins are just functions with type signature :: mss -> mss, you can add more Mixins by connecting them with `<|`
 + use `do` after the last `<|` to pass orginal mss object into Mixins or add a `{}` if don't have one
