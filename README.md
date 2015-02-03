@@ -132,9 +132,9 @@ foobar do
 foo = (x) -> (y) -> console.log x + y
 foo 2 <| 3
 # will log 5
-```
+
 =>
-```
+
 var foo;
 foo = function(bar){
   bar == null && (bar = 8);
