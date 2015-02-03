@@ -244,7 +244,7 @@ MSS.EllipT$ = (mss) -> mss
     ..textOverflow = \ellipsis
 
 #########################################      #   #    ########
-# UPPERCASE -> bombs, use with caution ##    # # # #    ########
+# UPPERCASE -> BOMBS, use with caution ##    # # # #    ########
 #########################################  #   #   #    ########
 
 # indexMixin$ :: (prefix, index) -> (mss) -> mss
@@ -255,7 +255,7 @@ MSS.PREFIX_MAP = (prefixs_, indexMixin) -> (mss) ->
     for sel of mss
         prefixs.map (prefix, index) ->
             newMss.[prefix+sel] = {}
-            newMss.[prefix+sel] <<<< (indexMixin prefix, index <| mss)
+            newMss.[prefix+sel] <<<< (indexMixin prefix, index <| mss[sel])
 
     newMss
 
@@ -265,7 +265,7 @@ MSS.MAP_SUFFIX = (_suffix, indexMixin) -> (mss) ->
     for sel of mss
         suffixs.map (suffix, index) ->
             newMss.[sel+suffix] = {}
-            newMss.[sel+suffix] <<<< (indexMixin suffix, index <| mss)
+            newMss.[sel+suffix] <<<< (indexMixin suffix, index <| mss[sel])
 
     newMss
 
