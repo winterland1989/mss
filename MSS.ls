@@ -120,6 +120,9 @@ MSS.arrValU = (vArr, i, unit) ->
 # method start with UpperCase -> mixins      # # # #    ########
 #########################################  #   #   #    ########
 
+# aka overload, didnt serve as a base function for performance concerns
+MSS.Mixin = (mssMix) -> (mss) -> mss <<<< mssMix
+
 # size shorthand
 MSS.Size = (width, height) -> (mss) -> mss
     if width then ..width = width + \px
@@ -247,26 +250,41 @@ MSS.EllipT$ = (mss) -> mss
 # UPPERCASE -> BOMBS, use with caution ##    # # # #    ########
 #########################################  #   #   #    ########
 
+# apply Mixin to sub mss object, while preserve CSS props
+MSS.MAP = (Mixin) -> (mss) ->
+    newMss = {}
+    for key of mss
+        if typeof mss[key] is "object"
+            newMss[key] = {} <<<< (Mixin mss[key])
+        else
+            newMss[key] = mss[key]
+    newMss
+
+# same as MAP plus prefix and index lambda
 # indexMixin$ :: (prefix, index) -> (mss) -> mss
 # you'd better know what you are doing ^_^
 MSS.PREFIX_MAP = (prefixs_, indexMixin) -> (mss) ->
     newMss = {}
     prefixs = prefixs_.split '_'
-    for sel of mss
-        prefixs.map (prefix, index) ->
-            newMss.[prefix+sel] = {}
-            newMss.[prefix+sel] <<<< (indexMixin prefix, index <| mss[sel])
-
+    for key of mss
+        if typeof mss[key] is "object"
+            prefixs.map (prefix, index) ->
+                newMss[prefix+key] = {}
+                newMss[prefix+key] <<<< (indexMixin prefix, index <| mss[key])
+        else
+            newMss[key] = mss[key]
     newMss
 
 MSS.MAP_SUFFIX = (_suffix, indexMixin) -> (mss) ->
     newMss = {}
     suffixs = _suffix.split '_'
-    for sel of mss
-        suffixs.map (suffix, index) ->
-            newMss.[sel+suffix] = {}
-            newMss.[sel+suffix] <<<< (indexMixin suffix, index <| mss[sel])
-
+    for key of mss
+        if typeof mss[key] is "object"
+            suffixs.map (suffix, index) ->
+                newMss[key+suffix] = {}
+                newMss[key+suffix] <<<< (indexMixin suffix, index <| mss[key])
+        else
+            newMss[key] = mss[key]
     newMss
 
 module.exports = MSS

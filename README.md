@@ -226,7 +226,7 @@ At this point i guess you wanna ask, can we do something more fun/functional? Af
 ```
 ohMyGoooood: MSS.MAP_SUFFIX \Night_Morning_Dying,
     (suffix, index) -> (mss) -> mss
-        ..$after = content: \'+ suffix + \'
+        ..$after = content: \' + suffix + \'
         ..top = MSS.px index*200
 <|  do
     Fuck:
