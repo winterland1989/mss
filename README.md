@@ -189,21 +189,29 @@ Mixins are special functions, they should take a mss object as argument and retu
 + use `do` after the last `<|` to pass orginal mss object into Mixins or add a `{}` if don't have one
 
 ```
-OhMyGod: MSS.Border 5 \red \LR <| MSS.CenterT$ <| do
+ohMyGod: MSS.Border 5 \red \LR <| MSS.CenterT$ <| do
     margin: ...
+    ohMyGodAgain:
+        padding: ...
 =>
 #LiveScript Object in VM
 ohMyGod:
     borderLeft: '5px solid red'
     borderRight: '5px solid red'
     textAlign: 'center'
+    margin: ...
+    ohMyGodAgain:
+        ...
 =>
 .ohMyGod {
-    border-left: '5px solid red'
-    border-right: '5px solid red'
-    text-align: 'center'
+    border-left: '5px solid red';
+    border-right: '5px solid red';
+    text-align: 'center';
+    margin: ...
 }
-
+.ohMyGod .ohMyGodAgain {
+    padding: ...
+}
 ```
 See Full List of Mixins provided by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L120)
 
