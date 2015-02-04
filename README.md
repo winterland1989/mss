@@ -10,7 +10,7 @@ MSS.parse takes a mss object as input and output a css string
 + MSS will parse the nested object into nested selectors by connnecting selectors into a descendant selector
 
 Let's see an example:
-```
+```ls
 mss =
     fooClass:
         zIndex: 999
@@ -44,7 +44,7 @@ As shown above, the selectors and prop name are converted for the writing  ease 
 + Class selector is written in lowerCase
 + html tag selector is written in UpperCase
 + id selector is written in $UpperCase, eg(mss => CSS):
-```
+```ls
 slider: 
     margin: ...
 => 
@@ -61,7 +61,7 @@ $Index:
 #index { margin: ...}
 ```
 + nested selectors is concated with space, while `&` cancel it
-```
+```ls
 slider:
     margin: ... 
     sliderBtn:
@@ -74,7 +74,7 @@ slider:
 .slider.on {color: ...}
 ```
 + `$` cancel the descendant space and connect parent selector with `:`
-```
+```ls
 sliderBtn:
     padding: ...
     $hover:
@@ -84,7 +84,7 @@ sliderBtn:
 .sliderBtn:hover { color: ... }
 ```
 + `_` turn selector into a list of selectors, and you can nest list
-```
+```ls
 blueBird_blueOcean:
     color: \blue
     redText_$RedWine_Span:
@@ -106,7 +106,7 @@ blueBird_blueOcean:
 ```
 **Rules for parsing a mss prop-name are:**
 + turn `camelCase` to `camel-case` and `MyCamelCase` to `-my-camel-case`
-```
+```ls
 fooBar:
     marginLeft: \50%
     MozBoxShadow: '10px 10px 5px #888888'
@@ -121,7 +121,7 @@ Here comes the fun part, you should know some basic LiveScript syntax, such as `
 #### Warm up, !, do and <|
 If you are familiar with [LiveScript](http://livescript.net), you can skip this section.
 `!` in LiveScript means apply a function with no arguments, `do` means pass a plain object to a function, and `<|` stand for back-pipe(borrowed from F#, aka. $ in Haskell), it mean apply the right value to the left function, you can think `<|` as it put right expression into a invisible`()`, eg(LiveScript => Javascript):
-```
+```ls
 foo = (bar = 8) -> console.log bar
 foo! 
 # will log 8
@@ -162,7 +162,7 @@ foo(2)(3);
 
 #### Helper Functions
 Helper functions are quite easy, they are just like function you used in stylus, all helper functions in MSS is written in camelCase, such as `px` or `rgba`
-```
+```ls
 $OhMyGod:
     margin: MSS.px 2 4 5
     padding: MSS.pc 10 10
@@ -188,7 +188,7 @@ Mixins are special functions, they should take a mss object as argument and retu
 + Since Mixins are just functions with type signature :: mss -> mss, you can add more Mixins by connecting them with `<|`
 + use `do` after the last `<|` to pass orginal mss object into Mixins or add a `{}` if don't have one
 
-```
+```ls
 ohMyGod: MSS.Border 5 \red \LR <| MSS.CenterT$ <| do
     margin: ...
     ohMyGodAgain:
@@ -223,7 +223,7 @@ At this point i guess you wanna ask, can we do something more fun/functional? Af
     +  list_of_suffix is suffix list concated with `_` just like in mss
     + indexMixin :: (suffix, index) -> (mss) -> mss
 
-```
+```ls
 ohMyGoooood: MSS.MAP_SUFFIX \Night_Morning_Dying,
     (suffix, index) -> (mss) -> mss
         ..$after = content: \' + suffix + \'
