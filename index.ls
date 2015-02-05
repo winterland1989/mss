@@ -15,7 +15,7 @@ marked.setOptions do
     highlight: (code) -> hljs.highlightAuto(code).value
 
 m.request do
-    url: \README.md
+    url: \README.md.html
     method: \GET
     deserialize: (data) -> marked data
 
