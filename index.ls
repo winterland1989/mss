@@ -32,10 +32,12 @@ i.view = ->
                     # 9 => TABKEY
                     | e.keyCode == 9
                         e.preventDefault!
-                        (h.eElem e).value += '    '
+                        self = (h.eElem e)
+                        selStart = self.selectionStart;
+                        self.value = self.value.substring(0,selStart) + '    ' + self.value.substring(selStart)
+                        self.selectionStart = self.selectionEnd = selStart + 4
 
                         m.redraw.strategy \none
-
                 onkeyup: (e) ->
                     i.mssInput = (h.eElem e).value
                     srcLs = 'window.mssInputObj = \n' + ((i.mssInput.split \\n).map (line) -> "    #line").join \\n
@@ -48,11 +50,9 @@ i.view = ->
 
                             i.parseHint = errMsg
 
-                        else i.parseHint = 'Look NICE!'
-                    console.log window.mssInputObj
-                    if typeof window.mssInputObj == "object"
-
-                        i.mssOutput = MSS.parse window.mssInputObj, true
+                        else if typeof window.mssInputObj == "object"
+                            i.parseHint = 'Look NICE!'
+                            i.mssOutput = MSS.parse window.mssInputObj, true
 
             m '.parseHint', i.parseHint
 
