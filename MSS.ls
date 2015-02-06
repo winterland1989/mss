@@ -10,15 +10,25 @@ MSS = {}
 # helper to add style to browser ########    # # # #    ########
 #########################################  #   #   #    ########
 
-MSS.tag = (id, cssText) ->
+# load a css string to DOM(with id is optional), return the style element
+MSS.tag = (cssText, id) ->
     styleEl = document.createElement('style')
-    styleEl.id = id
-    #Apparently some version of Safari needs the following line? I dunno.
+    if id then styleEl.id = id
+    styleEl.type = \text/css
+    # Fix IE < 9
     if !window.ltIE9
         styleEl.appendChild document.createTextNode(cssText)
+    else
+        styleEl.styleSheet.cssText = cssText
+
     #Append style element to head
     document.head = document.head || document.getElementsByTagName('head')[0]
     document.head.appendChild styleEl
+    styleEl
+
+# unload a style element from DOM
+MSS.unTag = (styleEl) ->
+    if styleEl then document.head.removeChild styleEl
 
 #########################################      #   #    ########
 # let's rock ############################    # # # #    ########
