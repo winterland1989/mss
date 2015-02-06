@@ -1,0 +1,27 @@
+# System temp files
+*~
+.DS_Store
+!.gitkeep
+app.sublime-workspace
+app.sublime-project
+.idea
+
+# Node modules
+node_modules
+
+# Publish zip
+pubs.zip
+
+# Common
+*.log
+.pid
+
+# App
+*.swp
+*.swo
+*.db
+
+# Source
+*.ls
+*.ejs
+
