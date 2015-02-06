@@ -22,7 +22,7 @@ mss =
                 width: '100%'   
                 
 MSS.parse mss, true
-// set second argmument to true to enable prettify , parse above mss will generate following CSS
+/* set second argmument to true to enable prettify , parse above mss will generate following CSS
 .fooClass #barId input,
 .fooClass .anotherClass input{
   border-radius:12px;
@@ -44,6 +44,7 @@ As shown above, the selectors and prop name are converted for the writing  ease 
 + Class selector is written in lowerCase
 + html tag selector is written in UpperCase
 + id selector is written in $UpperCase, eg(mss => CSS):
+
 ```ls
 slider: 
     margin: ...
@@ -60,7 +61,9 @@ $Index:
 => 
 #index { margin: ...}
 ```
+
 + nested selectors is concated with space, while `&` cancel it
+
 ```ls
 slider:
     margin: ... 
@@ -73,7 +76,9 @@ slider:
 .slider .sliderBtn {padding: ...} 
 .slider.on {color: ...}
 ```
+
 + `$` cancel the descendant space and connect parent selector with `:`
+
 ```ls
 sliderBtn:
     padding: ...
@@ -83,7 +88,9 @@ sliderBtn:
 .sliderBtn { padding: ... }
 .sliderBtn:hover { color: ... }
 ```
+
 + `_` turn selector into a list of selectors, and you can nest list
+
 ```ls
 blueBird_blueOcean:
     color: \blue
@@ -104,8 +111,10 @@ blueBird_blueOcean:
 }
 
 ```
+
 **Rules for parsing a mss prop-name are:**
 + turn `camelCase` to `camel-case` and `MyCamelCase` to `-my-camel-case`
+
 ```ls
 fooBar:
     marginLeft: \50%
@@ -116,11 +125,14 @@ fooBar:
     -moz-box-shadow: 10px 10px 5px #888888;
 }
 ```
+
 ### Functions and Mixins
 Here comes the fun part, you should know some basic LiveScript syntax, such as `\` create a string literal, `let` create a lambda call, and we will use `!`, `do` and `<|` a lot.
+
 #### Warm up, !, do and <|
 If you are familiar with [LiveScript](http://livescript.net), you can skip this section.
 `!` in LiveScript means apply a function with no arguments, `do` means pass a plain object to a function, and `<|` stand for back-pipe(borrowed from F#, aka. $ in Haskell), it mean apply the right value to the left function, you can think `<|` as it put right expression into a invisible`()`, eg(LiveScript => Javascript):
+
 ```ls
 foo = (bar = 8) -> console.log bar
 foo! 
@@ -162,6 +174,7 @@ foo(2)(3);
 
 #### Helper Functions
 Helper functions are quite easy, they are just like function you used in stylus, all helper functions in MSS is written in camelCase, such as `px` or `rgba`
+
 ```ls
 $OhMyGod:
     margin: MSS.px 2 4 5
@@ -177,6 +190,7 @@ $OhMyGod:
     padding 10% 10%;
 }
 ```
+
 See Full List of helper functions provided by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L90)
 
 #### Mixins
@@ -213,6 +227,7 @@ ohMyGod:
     padding: ...
 }
 ```
+
 See Full List of Mixins provided by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L120)
 
 #### BOMBS
@@ -271,6 +286,7 @@ ohMyGoooood:
     content: 'Dying';
 }
 ```
+
 See Full List of BOMBS provided by MSS [HERE](https://github.com/winterland1989/MSS/blob/master/MSS.ls#L247)
 
 ### Usage 

@@ -194,7 +194,15 @@ MSS.LineH = (h, fontS) -> (mss) -> mss
         ..height = h + \px
         ..lineHeight = h + \px
     if fontS
-        ..fontSize = fontS
+        ..fontSize = fontS + \px
+    ..verticalAlign = \middle
+
+MSS.LineHPc = (h, fontS) -> (mss) -> mss
+    if h
+        ..height = h + \%
+        ..lineHeight = h + \%
+    if fontS
+        ..fontSize = fontS + \%
     ..verticalAlign = \middle
 
 # set hover cursor to pointer
@@ -247,22 +255,33 @@ MSS.EllipT$ = (mss) -> mss
     ..textOverflow = \ellipsis
 
 #########################################      #   #    ########
-# UPPERCASE -> BOMBS, use with caution ##    # # # #    ########
+# UPPERCASE -> BOMBs, use with CAUTIONs!     # # # #    ########
 #########################################  #   #   #    ########
 
-# apply Mixin to sub mss object, while preserve CSS props
+# MAP Mixin to a mss object's mss object, while preserve it's own CSS props
+# Mixin :: (mss) -> mss
 MSS.MAP = (Mixin) -> (mss) ->
     newMss = {}
     for key of mss
         if typeof mss[key] is "object"
-            newMss[key] = {} <<<< (Mixin mss[key])
+            newMss[key] = Mixin mss[key]
         else
             newMss[key] = mss[key]
     newMss
 
-# same as MAP plus prefix and index lambda
-# indexMixin$ :: (prefix, index) -> (mss) -> mss
-# you'd better know what you are doing ^_^
+# same as above, with an extra selector argument passed to Mixin
+# Mixin :: (selector) -> (mss) -> mss
+MSS.APPLY = (Mixin) -> (mss) ->
+    newMss = {}
+    for key of mss
+        if typeof mss[key] is "object"
+            newMss[key] = Mixin key <| mss[key]
+        else
+            newMss[key] = mss[key]
+    newMss
+
+# same as APPLY plus prefix and index argmument
+# indexMixin$ :: (prefix, index, originSelector) -> (mss) -> mss
 MSS.PREFIX_MAP = (prefixs_, indexMixin) -> (mss) ->
     newMss = {}
     prefixs = prefixs_.split '_'
@@ -270,11 +289,12 @@ MSS.PREFIX_MAP = (prefixs_, indexMixin) -> (mss) ->
         if typeof mss[key] is "object"
             prefixs.map (prefix, index) ->
                 newMss[prefix+key] = {}
-                newMss[prefix+key] <<<< (indexMixin prefix, index <| mss[key])
+                newMss[prefix+key] <<<< (indexMixin prefix, index, key <| mss[key])
         else
             newMss[key] = mss[key]
     newMss
 
+# indexMixin$ :: (prefix, index, originSelector) -> (mss) -> mss
 MSS.MAP_SUFFIX = (_suffix, indexMixin) -> (mss) ->
     newMss = {}
     suffixs = _suffix.split '_'
@@ -282,7 +302,27 @@ MSS.MAP_SUFFIX = (_suffix, indexMixin) -> (mss) ->
         if typeof mss[key] is "object"
             suffixs.map (suffix, index) ->
                 newMss[key+suffix] = {}
-                newMss[key+suffix] <<<< (indexMixin suffix, index <| mss[key])
+                newMss[key+suffix] <<<< (indexMixin suffix, index, key <| mss[key])
+        else
+            newMss[key] = mss[key]
+    newMss
+
+# LIFT Mixin to sub mss object, while preserve CSS props
+# levelStart, which level a lifted Mixin begin to apply, default: 0
+# levelEnd: which level a lifted Mixin stop to apply, default: -1
+# levelEnd: any negative number resulted in deepest level of mss tree
+# Mixin :: (seletctor) -> (mss) -> mss
+MSS.LIFT = (Mixin, levelStart = 0, levelEnd = -1) -> (mss) ->
+    newMss = {}
+    for key of mss
+        if typeof mss[key] is "object"
+            if levelEnd != 0
+                mss[key] = MSS.LIFT Mixin, levelStart-1, levelEnd-1 <| mss[key]
+
+            if levelStart <= 0
+                newMss[key] = Mixin key <| mss[key]
+            else
+                newMss[key] = mss[key]
         else
             newMss[key] = mss[key]
     newMss
