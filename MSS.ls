@@ -402,6 +402,8 @@ MSS.ClearFix$ = (mss) -> mss
 #     maxWidth: \1200px
 #   _handheld:
 #     minWidth: \700px
+#   $tv:
+#     color: void
 # <|
 # ...
 #
@@ -409,9 +411,13 @@ MSS.MEDIA = (queryObj) -> (mss) -> mss
     queryStrArr = for mediaType, queryRules of queryObj
         if mediaType[0] == \_ then mediaType = 'not ' + mediaType.slice 1
         if mediaType[0] == \$ then mediaType = 'only ' + mediaType.slice 1
-        if queryRules then mediaType = mediaType + ' and '
-        mediaType + [ (MSS.parsePropName k) + \: + v for k, v of queryRules ].join ' and '
-
+        if queryRules
+            mediaType + ' and ' +
+            (for k, v of queryRules
+                \( + (MSS.parsePropName k) +
+                (if v then \: + v else '') + \)
+            ).join ' and '
+        else mediaType
     ..MEDIA = "@media " + queryStrArr.join ','
 
 # MAP Mixin to a mss object's mss object, while preserve it's own CSS props
