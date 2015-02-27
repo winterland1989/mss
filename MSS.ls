@@ -26,6 +26,14 @@ MSS.tag = (cssText, id) ->
     document.head.appendChild styleEl
     styleEl
 
+# reload a css string to a style element
+MSS.reTag = (cssText, styleEl) ->
+    if !window.ltIE9
+        styleEl.childNodes[0].textContent = cssText
+    else
+        styleEl.styleSheet.cssText = cssText
+    styleEl
+
 # unload a style element from DOM
 MSS.unTag = (styleEl) ->
     if styleEl then document.head.removeChild styleEl
@@ -56,8 +64,16 @@ MSS.parse = (mss, pretty = false, compiledStylePrefix = '') ->
         if cssRule.length then compiledStyle := compiledStyle +
             ( selectors.join ",#lineEnd" )+
             '{' + lineEnd + "#cssRule" + '}' + lineEnd
-    parseR [''], mss
-    compiledStyle
+
+    if queryStr = mss.MEDIA
+        # hide MEDIA prop before parse and set it back after parse
+        delete mss.MEDIA
+        parseR [''], mss
+        mss.MEDIA = queryStr
+        queryStr + '{' + lineEnd + compiledStyle + lineEnd + '}'
+    else
+        parseR [''], mss
+        compiledStyle
 
 # selector parsing rules (* stand for space):
 # &fooBar -> continue parse fooBar    => continue parse and directly concated with parent selector
@@ -80,7 +96,9 @@ MSS.parseSelectors = (selectors) ->
         # foobar -> \ .foobar
         | \a <= sel.0 <= \z                 then nest + \. + sel
         # Img -> \ img
-        | otherwise                         then nest + sel.0.toLowerCase! + sel.slice 1
+        | \A <= sel.0 <= \Z                 then nest + sel.0.toLowerCase! + sel.slice 1
+        # do nothing if dont recognize
+        | otherwise                         then sel
 
 # prop name parsing rules:
 # marginLeft -> margin-left
@@ -111,7 +129,10 @@ MSS.gold = (v) -> Math.round v*0.618
 MSS.goldR = (v) -> Math.round v/0.618
 
 # rgb color
-MSS.rgb = (r, g, b) -> "rgba(#r,#g,#b)"
+MSS.rgb = (r, g, b) -> "rgb(#r,#g,#b)"
+
+# BW color
+MSS.bw = (bw) -> "rgb(#bw,#bw,#bw)"
 
 # rgba color
 MSS.rgba = (r, g, b, a) -> "rgba(#r,#g,#b,#a)"
@@ -122,9 +143,38 @@ MSS.hsl = (h, s, l) -> "hsl(#h,#s%,#l%)"
 # hsla color, hue: 0~360, saturation: 0~100, lightness: 0~100, alpha: 0.0~1.0
 MSS.hsla = (r, g, b, a) -> "hsla(#h,#s%,#l%,#a)"
 
-# array value helper
-MSS.arrValU = (vArr, i, unit) ->
-    if v = vArr[i] then v + unit else 0
+# css3 gradient functions
+# a helper to mix color and position
+MSS.mixStops = (colorStops, posStops, unit) ->
+    posStops.map (pos, index) -> colorStops[index] = colorStops[index] + ' ' + pos + unit
+    colorStops.join \,
+
+# linear gradient
+MSS.lnrGrad = (sideOrAngle, colorStops = [], posStops = []) ->
+    c = MSS.mixStops colorStops, posStops, \px
+    "linear-gradient(#sideOrAngle,#c)"
+
+MSS.lnrGradPc = (sideOrAngle, colorStops, posStops) ->
+    c = MSS.mixStops colorStops, posStops, \%
+    "linear-gradient(#sideOrAngle,#c)"
+
+# radial gradient
+MSS.radGrad = (colorStops, posStops) ->
+    c = MSS.mixStops colorStops, posStops, \px
+    "radial-gradient(#c)"
+
+MSS.radGradPc = (colorStops, posStops) ->
+    c = MSS.mixStops colorStops, posStops, \%
+    "radial-gradient(#c)"
+
+# repeat gradient
+MSS.rptGrad = (sideOrAngle, colorStops, posStops) ->
+    c = MSS.mixStops colorStops, posStops, \px
+    "repeat-gradient(#sideOrAngle,#c)"
+
+MSS.rptGradPc = (sideOrAngle, colorStops, posStops) ->
+    c = MSS.mixStops colorStops, posStops, \%
+    "repeat-gradient(#sideOrAngle,#c)"
 
 #########################################      #   #    ########
 # method start with UpperCase -> mixins      # # # #    ########
@@ -132,6 +182,17 @@ MSS.arrValU = (vArr, i, unit) ->
 
 # aka overload, didnt serve as a base function for performance concerns
 MSS.Mixin = (mssMix) -> (mss) -> mss <<<< mssMix
+
+# a helper for directional css property de-shorthand, eg margin, padding...
+MSS.DirectionVal = (directions, props, vArr, unit, propsDirections = [\Top \Right \Bottom \Left]) -> (mss) -> mss
+    if (i = directions.indexOf(\T)) != -1
+        ..[ props + propsDirections[0] ]= if v = vArr[i] then v + unit else 0
+    if (i = directions.indexOf(\R)) != -1
+        ..[ props + propsDirections[1] ]= if v = vArr[i] then v + unit else 0
+    if (i = directions.indexOf(\B)) != -1
+        ..[ props + propsDirections[2] ]= if v = vArr[i] then v + unit else 0
+    if (i = directions.indexOf(\L)) != -1
+        ..[ props + propsDirections[3] ]= if v = vArr[i] then v + unit else 0
 
 # size shorthand
 MSS.Size = (width, height) -> (mss) -> mss
@@ -142,19 +203,96 @@ MSS.SizePc = (width, height) -> (mss) -> mss
     if width then ..width = width + \%
     if height then ..height = height + \%
 
-# border shorthand, arguments order: width, color, directions, borderStyle; example:
-# (5, \red, \LR, \dashed) ->
-#   borderLeft: 5px dashed red
-#   borderRight: 5px dashed red
-MSS.Border = (width = 0, color = \#eee, directions = \A, borderStyle = \solid) -> (mss) ->
+# margin shorthand
+MSS.Mar = (directions = '', ...v) ->
+    MSS.DirectionVal directions, \margin, v, \px
+
+MSS.MarPc = (directions = '', ...v) ->
+    MSS.DirectionVal directions, \margin, v, \%
+
+MSS.AllMar = (...v) -> (mss) -> mss
+    ..margin = MSS.px ...v
+
+MSS.AllMarPc = (...v) -> (mss) -> mss
+    ..margin = MSS.pc ...v
+
+# padding shorthand
+MSS.Pad = (directions = '', ...v) ->
+    MSS.DirectionVal directions, \padding, v, \px
+
+MSS.PadPc = (directions = '', ...v) ->
+    MSS.DirectionVal directions, \padding, v, \%
+
+MSS.AllPad = (...v) -> (mss) -> mss
+    ..padding = MSS.px ...v
+
+MSS.AllPadPc = (...v) -> (mss) -> mss
+    ..padding = MSS.pc ...v
+
+# border shorthand
+MSS.Border = (directions = '', width = 0, color = \#eee, borderStyle = \solid) -> (mss) -> mss
     style = "#{width}px #borderStyle #color"
-    mss
-        if directions.indexOf(\A) != -1 then ..border = style
-        else
-            if directions.indexOf(\T) != -1 then ..borderTop    = style
-            if directions.indexOf(\R) != -1 then ..borderRight  = style
-            if directions.indexOf(\B) != -1 then ..borderBottom = style
-            if directions.indexOf(\L) != -1 then ..borderLeft   = style
+    if directions.indexOf(\T) != -1 then ..borderTop    = style
+    if directions.indexOf(\R) != -1 then ..borderRight  = style
+    if directions.indexOf(\B) != -1 then ..borderBottom = style
+    if directions.indexOf(\L) != -1 then ..borderLeft   = style
+
+MSS.AllBorder =  (width = 0, color = \#eee, borderStyle = \solid) -> (mss) -> mss
+    ..border = "#{width}px #borderStyle #color"
+
+# border radius
+MSS.BorderRadius = (directions = '', ...v) -> (mss) ->
+    mss |>
+    MSS.DirectionVal directions, \border, v, \px, [\TopLeftRadius \TopRightRadius \BottomLeftRadius \TopLeftRadius] |>
+    MSS.DirectionVal directions, \border, v, \px, [\TopRightRadius \BottomRightRadius \BottomRightRadius \BottomLeftRadius]
+
+MSS.BorderRadiusPc = (directions = '', ...v) -> (mss) ->
+    mss |>
+    MSS.DirectionVal directions, \border, v, \%, [\TopLeftRadius \TopRightRadius \BottomLeftRadius \TopLeftRadius] |>
+    MSS.DirectionVal directions, \border, v, \%, [\TopRightRadius \BottomRightRadius \BottomRightRadius \BottomLeftRadius]
+
+MSS.AllBorderRadius = (...v) -> (mss) -> mss
+    ..borderRadius = MSS.px ...v
+
+MSS.AllBorderRadiusPc = (...v) -> (mss) -> mss
+    ..borderRadius = MSS.pc ...v
+
+# corner radius
+MSS.CornerRadius = (corner = '', ...v) -> (mss) ->
+    cornerAlias = []
+    if corner.indexOf(\TL) != -1 or corner.indexOf(\LT) != -1 then cornerAlias.push \T
+    if corner.indexOf(\TR) != -1 or corner.indexOf(\RT) != -1 then cornerAlias.push \R
+    if corner.indexOf(\RB) != -1 or corner.indexOf(\BR) != -1 then cornerAlias.push \B
+    if corner.indexOf(\BL) != -1 or corner.indexOf(\LB) != -1 then cornerAlias.push \L
+    mss |>
+    MSS.DirectionVal cornerAlias, \border, v, \px, [\TopLeftRadius \TopRightRadius \BottomRightRadius \BottomLeftRadius]
+
+MSS.CornerRadiusPc = (corner = '', ...v) -> (mss) ->
+    cornerAlias = []
+    if corner.indexOf(\TL) != -1 or corner.indexOf(\LT) != -1 then cornerAlias.push \T
+    if corner.indexOf(\TR) != -1 or corner.indexOf(\RT) != -1 then cornerAlias.push \R
+    if corner.indexOf(\RB) != -1 or corner.indexOf(\BR) != -1 then cornerAlias.push \B
+    if corner.indexOf(\BL) != -1 or corner.indexOf(\LB) != -1 then cornerAlias.push \L
+    mss |>
+    MSS.DirectionVal cornerAlias, \border, v, \%, [\TopLeftRadius \TopRightRadius \BottomRightRadius \BottomLeftRadius]
+
+# absolute position
+MSS.AbsPos = (directions = '', ...v) -> (mss) -> mss
+    ..position = \absolute
+    MSS.DirectionVal directions, '', v, \px, [\top, \right, \bottom, \left]  <| mss
+
+MSS.AbsPosPc = (directions = '', ...v) -> (mss) -> mss
+    ..position = \absolute
+    MSS.DirectionVal directions, '', v, \%, [\top, \right, \bottom, \left]  <| mss
+
+# relative position
+MSS.RelPos = (directions = '', ...v) -> (mss) -> mss
+    ..position = \relative
+    MSS.DirectionVal directions, '', v, \px, [\top, \right, \bottom, \left]  <| mss
+
+MSS.RelPosPc = (directions = '', ...v) -> (mss) -> mss
+    ..position = \relative
+    MSS.DirectionVal directions, '', v, \%, [\top, \right, \bottom, \left]  <| mss
 
 # transistion shorthand with default value
 MSS.Tran = (prop = \width, time = 0.2, type = \ease, delay = 0) -> (mss) -> mss
@@ -173,30 +311,11 @@ MSS.InlineB = (directions = void) -> (mss) -> mss
         ..[\*zoom] = 1
         ..[\*display] = \inline
 
-# position helper
-MSS.Pos = (directions = '', vArr = [], unit = \px) -> (mss) -> mss
-    if (i = directions.indexOf(\T)) != -1 then ..top    = MSS.arrValU vArr, i, unit
-    if (i = directions.indexOf(\R)) != -1 then ..right  = MSS.arrValU vArr, i, unit
-    if (i = directions.indexOf(\B)) != -1 then ..bottom = MSS.arrValU vArr, i, unit
-    if (i = directions.indexOf(\L)) != -1 then ..left   = MSS.arrValU vArr, i, unit
-
-# absolute position
-MSS.AbsPos = (directions = \TL, ...v) -> (mss) -> mss
-    ..position = \absolute
-    MSS.Pos directions, v <| mss
-
-MSS.AbsPosPc = (directions = \TL, ...v) -> (mss) -> mss
-    ..position = \absolute
-    MSS.Pos directions, v, \% <| mss
-
-# relative position
-MSS.RelPos = (directions = \TL, ...v) -> (mss) -> mss
-    ..position = \relative
-    MSS.Pos directions, v <| mss
-
-MSS.RelPosPc = (directions = \TL, ...v) -> (mss) -> mss
-    ..position = \relative
-    MSS.Pos directions, v, \% <| mss
+# float shorthand
+MSS.Float = (directions = void) -> (mss) -> mss
+    switch
+    | directions == \L => ..float = \left
+    | directions == \R => ..float = \right
 
 # vertical align a line
 MSS.LineH = (h, fontS) -> (mss) -> mss
@@ -215,7 +334,7 @@ MSS.LineHPc = (h, fontS) -> (mss) -> mss
         ..fontSize = fontS + \%
     ..verticalAlign = \middle
 
-# set hover cursor to pointer
+# set hover color with cursor to pointer
 MSS.Hover = ( color, cur = \pointer ) -> (mss) -> mss
     ..{}$hover.cursor = cur
     if color then ..$hover.color = color
@@ -264,9 +383,36 @@ MSS.EllipT$ = (mss) -> mss
     ..overflow = \hidden
     ..textOverflow = \ellipsis
 
+# clearFix
+MSS.ClearFix$ = (mss) -> mss
+    ..[\*zoom] = 1
+    ..$before_$after =
+        content: \''
+        display: \table
+    ..$after =
+        clear: \both
+
 #########################################      #   #    ########
 # UPPERCASE -> BOMBs, use with CAUTIONs!     # # # #    ########
 #########################################  #   #   #    ########
+
+# wrap a mss object into a MEDIA query, example:
+# MSS.MEDIA do
+#   all:
+#     maxWidth: \1200px
+#   _handheld:
+#     minWidth: \700px
+# <|
+# ...
+#
+MSS.MEDIA = (queryObj) -> (mss) -> mss
+    queryStrArr = for mediaType, queryRules of queryObj
+        if mediaType[0] == \_ then mediaType = 'not ' + mediaType.slice 1
+        if mediaType[0] == \$ then mediaType = 'only ' + mediaType.slice 1
+        if queryRules then mediaType = mediaType + ' and '
+        mediaType + [ (MSS.parsePropName k) + \: + v for k, v of queryRules ].join ' and '
+
+    ..MEDIA = "@media " + queryStrArr.join ','
 
 # MAP Mixin to a mss object's mss object, while preserve it's own CSS props
 # Mixin :: (mss) -> mss
@@ -321,7 +467,7 @@ MSS.MAP_SUFFIX = (_suffix, indexMixin) -> (mss) ->
 # levelStart, which level a lifted Mixin begin to apply, default: 0
 # levelEnd: which level a lifted Mixin stop to apply, default: -1
 # levelEnd: any negative number resulted in deepest level of mss tree
-# Mixin :: (seletctor) -> (mss) -> mss
+# Mixin :: (selector) -> (mss) -> mss
 MSS.LIFT = (Mixin, levelStart = 0, levelEnd = -1) -> (mss) ->
     newMss = {}
     for key of mss
