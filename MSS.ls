@@ -50,10 +50,8 @@ MSS.parse = (mss, pretty = false, compiledStylePrefix = '') ->
     # recursive parser
     parseR = (selectors, mss) ->
         cssRule = ''
+        mssArrFlag = mss instanceof Array
         for key, val of mss
-            # evaluate Mixins..
-            if typeof val is "function"
-                val = val {}
             # preserve @rules, abandon previous selectors
             if key.0 == \@
                 # @rules for @media, @keyframes..
@@ -68,16 +66,18 @@ MSS.parse = (mss, pretty = false, compiledStylePrefix = '') ->
                 if typeof val is "object"
                     subSelectors = key.split '_'
                     subSelectors = MSS.parseSelectors subSelectors
+                    # abandon array index
+                    if mssArrFlag then newSelectors = selectors
                     # for the spirit of list monad, let's expand!
-                    newSelectors =
+                    else newSelectors =
                         [ "#sel#subSel" for sel in selectors for subSel in subSelectors ]
                     parseR newSelectors, val
                 else
                     cssRule += indentSpace + (MSS.parsePropName key) + ":#val;" + lineEnd
 
-            if cssRule.length
-                compiledStyle := compiledStyle + ( selectors.join ",#lineEnd" ) +
-                    \{ + lineEnd + "#cssRule" + \} + lineEnd
+        if cssRule.length
+            compiledStyle := compiledStyle + ( selectors.join ",#lineEnd" ) +
+                \{ + lineEnd + "#cssRule" + \} + lineEnd
 
     parseR [''], mss
     compiledStyle
@@ -104,8 +104,6 @@ MSS.parseSelectors = (selectors) ->
         | \a <= sel.0 <= \z                 then nest + \. + sel
         # Img -> \ img
         | \A <= sel.0 <= \Z                 then nest + sel.0.toLowerCase! + sel.slice 1
-        # abandon array index key
-        | \0 <= sel.0 <= \9                 then ''
         # do nothing if dont recognize
         | otherwise                         then sel
 
