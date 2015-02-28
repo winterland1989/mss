@@ -64,13 +64,14 @@ MSS.parse = (mss, pretty = false, compiledStylePrefix = '') ->
             else
                 # expand sub mss objects
                 if typeof val is "object"
-                    subSelectors = key.split '_'
-                    subSelectors = MSS.parseSelectors subSelectors
                     # abandon array index
                     if mssArrFlag then newSelectors = selectors
                     # for the spirit of list monad, let's expand!
-                    else newSelectors =
-                        [ "#sel#subSel" for sel in selectors for subSel in subSelectors ]
+                    else
+                        subSelectors = key.split '_'
+                        subSelectors = MSS.parseSelectors subSelectors
+                        newSelectors =
+                            [ "#sel#subSel" for sel in selectors for subSel in subSelectors ]
                     parseR newSelectors, val
                 else
                     cssRule += indentSpace + (MSS.parsePropName key) + ":#val;" + lineEnd
@@ -191,7 +192,7 @@ MSS.rptGradPc = (sideOrAngle, colorStops, posStops) ->
 MSS.Mixin = (mssMix) -> (mss) -> mss <<<< mssMix
 
 # a helper for directional css property de-shorthand, eg margin, padding...
-MSS.DirectionVal = (directions, props, vArr, unit, propsDirections = [\Top \Right \Bottom \Left]) -> (mss) -> mss
+MSS.DirectionVal = (directions, props, vArr, unit, propsDirections = <[Top Right Bottom Left]>) -> (mss) -> mss
     <[T R B L]>.map (dir, index) ->
         if (i = directions.indexOf dir) != -1
             ..[ props + propsDirections[index] ] = if v = vArr[i] then v + unit else 0
@@ -232,24 +233,30 @@ MSS.APadPc = (...v) -> (mss) -> mss
     ..padding = MSS.pc ...v
 
 # border shorthand
-MSS.Border = (directions = '', width = 1, color = \#eee, borderStyle = \solid) ->
-    style = "#{width}px #borderStyle #color"
-    v = [style, style, style, style]
+MSS.Border = (directions = '', width = 1, color = \#eee, style = \solid) ->
+    s = "#{width}px #style #color"
+    v = [s, s, s, s]
     MSS.DirectionVal directions, \border, v, ''
 
-MSS.ABorder =  (width = 0, color = \#eee, borderStyle = \solid) -> (mss) -> mss
-    ..border = "#{width}px #borderStyle #color"
+MSS.ABorder =  (width = 0, color = \#eee, style = \solid) -> (mss) -> mss
+    ..border = "#{width}px #style #color"
+
+MSS.MBorder = (directions = '', width = [], color = [], style = []) ->
+    (mss) -> mss
+    |> MSS.DirectionVal directions, \border, width, \px, <[TopWidth RightWidth BottomWidth LeftWidth]>
+    |> MSS.DirectionVal directions, \border, color, \px, <[TopColor RightColor BottomColor LeftColor]>
+    |> MSS.DirectionVal directions, \border, style, \px, <[TopStyle RightStyle BottomStyle LeftStyle]>
 
 # border radius
 MSS.BorderRadius = (directions = '', ...v) -> (mss) ->
-    mss |>
-    MSS.DirectionVal directions, \border, v, \px, [\TopLeftRadius \TopRightRadius \BottomLeftRadius \TopLeftRadius] |>
-    MSS.DirectionVal directions, \border, v, \px, [\TopRightRadius \BottomRightRadius \BottomRightRadius \BottomLeftRadius]
+    mss
+    |> MSS.DirectionVal directions, \border, v, \px, <[TopLeftRadius TopRightRadius BottomLeftRadius TopLeftRadius]>
+    |> MSS.DirectionVal directions, \border, v, \px, <[TopRightRadius BottomRightRadius BottomRightRadius BottomLeftRadius]>
 
 MSS.BorderRadiusPc = (directions = '', ...v) -> (mss) ->
-    mss |>
-    MSS.DirectionVal directions, \border, v, \%, [\TopLeftRadius \TopRightRadius \BottomLeftRadius \TopLeftRadius] |>
-    MSS.DirectionVal directions, \border, v, \%, [\TopRightRadius \BottomRightRadius \BottomRightRadius \BottomLeftRadius]
+    mss
+    |> MSS.DirectionVal directions, \border, v, \%, <[TopLeftRadius TopRightRadius BottomLeftRadius TopLeftRadius]>
+    |> MSS.DirectionVal directions, \border, v, \%, <[TopRightRadius BottomRightRadius BottomRightRadius BottomLeftRadius]>
 
 MSS.ABorderRadius = (...v) -> (mss) -> mss
     ..borderRadius = MSS.px ...v
@@ -264,8 +271,8 @@ MSS.CornerRadius = (corner = '', ...v) -> (mss) ->
     if corner.indexOf(\TR) != -1 or corner.indexOf(\RT) != -1 then cornerAlias.push \R
     if corner.indexOf(\RB) != -1 or corner.indexOf(\BR) != -1 then cornerAlias.push \B
     if corner.indexOf(\BL) != -1 or corner.indexOf(\LB) != -1 then cornerAlias.push \L
-    mss |>
-    MSS.DirectionVal cornerAlias, \border, v, \px, [\TopLeftRadius \TopRightRadius \BottomRightRadius \BottomLeftRadius]
+    mss
+    |> MSS.DirectionVal cornerAlias, \border, v, \px, <[TopLeftRadius TopRightRadius BottomRightRadius BottomLeftRadius]>
 
 MSS.CornerRadiusPc = (corner = '', ...v) -> (mss) ->
     cornerAlias = []
@@ -273,8 +280,8 @@ MSS.CornerRadiusPc = (corner = '', ...v) -> (mss) ->
     if corner.indexOf(\TR) != -1 or corner.indexOf(\RT) != -1 then cornerAlias.push \R
     if corner.indexOf(\RB) != -1 or corner.indexOf(\BR) != -1 then cornerAlias.push \B
     if corner.indexOf(\BL) != -1 or corner.indexOf(\LB) != -1 then cornerAlias.push \L
-    mss |>
-    MSS.DirectionVal cornerAlias, \border, v, \%, [\TopLeftRadius \TopRightRadius \BottomRightRadius \BottomLeftRadius]
+    mss
+    |> MSS.DirectionVal cornerAlias, \border, v, \%, <[TopLeftRadius TopRightRadius BottomRightRadius BottomLeftRadius]>
 
 # absolute position
 MSS.AbsPos = (directions = '', ...v) -> (mss) -> mss
@@ -293,6 +300,17 @@ MSS.RelPos = (directions = '', ...v) -> (mss) -> mss
 MSS.RelPosPc = (directions = '', ...v) -> (mss) -> mss
     ..position = \relative
     MSS.DirectionVal directions, '', v, \%, [\top, \right, \bottom, \left]  <| mss
+
+# background
+MSS.Bg = (colorOrGradient) -> (mss) -> mss
+    ..background = colorOrGradient
+
+MSS.BgImg = (imgURL, size = '100% 100%', position = \center, repeat = \no-repeat, attachment, clip) ->
+    (mss) -> mss
+        ..background = "url(#imgURL) position repeat" +
+            (if attachment then attachment else '') +
+            (if clip then clip else '')
+        ..backgroundSize = size
 
 # transistion shorthand with default value
 MSS.Tran = (prop = '', time = 0.2, type = \ease, delay = 0) -> (mss) -> mss
@@ -359,13 +377,19 @@ MSS.Arrow = (directions, width, color) -> (mss) ->
         MSS.Border width, color, \R <| MSS.Border width, \transparent, \TLB <| mss
 
 # css3 animate
-MSS.Animate = (name, time = 1, type = \linear, delay = 0, iter = 1,  direction = \normal, fill = \none, state = \running) ->
+MSS.Animate = (name, time = 1, type = \linear, delay = 0, iter = 1, direction, fill, state) ->
     (mss) -> mss
-        ..animate = "#name #{time}s #type #{delay}ms #iter #direction #fill #state"
+        ..animate = "#name #{time}s #type #{delay}ms #iter" +
+            (if direction then direction else '') +
+            (if fill then fill else '') +
+            (if state then state else '')
 
-MSS.AnimateMs = (name, time = 1, type = \linear, delay = 0, iter = 1,  direction = \normal, fill = \none, state = \running) ->
+MSS.AnimateMs = (name, time = 1, type = \linear, delay = 0, iter = 1, direction, fill, state) ->
     (mss) -> mss
-        ..animate = "#name #{time}ms #type #{delay}ms #iter #direction #fill #state"
+        ..animate = "#name #{time}ms #type #{delay}ms #iter" +
+            (if direction then direction else '') +
+            (if fill then fill else '') +
+            (if state then state else '')
 
 #########################################      #   #    ########
 # mixins end with $ dont need arguments #    # # # #    ########
