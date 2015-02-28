@@ -47,33 +47,40 @@ MSS.parse = (mss, pretty = false, compiledStylePrefix = '') ->
     compiledStyle = compiledStylePrefix
     lineEnd = if pretty then \\n else ''
     indentSpace = if pretty then '  ' else ''
-
+    # recursive parser
     parseR = (selectors, mss) ->
         cssRule = ''
-        for key of mss
-            if typeof mss[key] is "object"
-                subSelectors = key.split '_'
-                subSelectors = MSS.parseSelectors subSelectors
-                # for the spirit of list monad!
-                newSelectors =
-                    [ "#sel#subSel" for sel in selectors for subSel in subSelectors ]
-                parseR newSelectors, mss[key]
+        for key, val of mss
+            # evaluate Mixins..
+            if typeof val is "function"
+                val = val {}
+            # preserve @rules, abandon previous selectors
+            if key.0 == \@
+                # @rules for @media, @keyframes..
+                if typeof val is "object"
+                    compiledStyle := compiledStyle + key + \{ + lineEnd
+                    parseR [''], val
+                    compiledStyle := compiledStyle + \} + lineEnd
+                # @rules for @charset, @import..
+                else compiledStyle := compiledStyle + key + ' ' + val + \\n
             else
-                cssRule += indentSpace + (MSS.parsePropName key) + ":#{mss[key]};" + lineEnd
+                # expand sub mss objects
+                if typeof val is "object"
+                    subSelectors = key.split '_'
+                    subSelectors = MSS.parseSelectors subSelectors
+                    # for the spirit of list monad, let's expand!
+                    newSelectors =
+                        [ "#sel#subSel" for sel in selectors for subSel in subSelectors ]
+                    parseR newSelectors, val
+                else
+                    cssRule += indentSpace + (MSS.parsePropName key) + ":#val;" + lineEnd
 
-        if cssRule.length then compiledStyle := compiledStyle +
-            ( selectors.join ",#lineEnd" )+
-            '{' + lineEnd + "#cssRule" + '}' + lineEnd
+            if cssRule.length
+                compiledStyle := compiledStyle + ( selectors.join ",#lineEnd" ) +
+                    \{ + lineEnd + "#cssRule" + \} + lineEnd
 
-    if queryStr = mss.MEDIA
-        # hide MEDIA prop before parse and set it back after parse
-        delete mss.MEDIA
-        parseR [''], mss
-        mss.MEDIA = queryStr
-        queryStr + '{' + lineEnd + compiledStyle + lineEnd + '}'
-    else
-        parseR [''], mss
-        compiledStyle
+    parseR [''], mss
+    compiledStyle
 
 # selector parsing rules (* stand for space):
 # &fooBar -> continue parse fooBar    => continue parse and directly concated with parent selector
@@ -97,6 +104,8 @@ MSS.parseSelectors = (selectors) ->
         | \a <= sel.0 <= \z                 then nest + \. + sel
         # Img -> \ img
         | \A <= sel.0 <= \Z                 then nest + sel.0.toLowerCase! + sel.slice 1
+        # abandon array index key
+        | \0 <= sel.0 <= \9                 then ''
         # do nothing if dont recognize
         | otherwise                         then sel
 
@@ -185,14 +194,9 @@ MSS.Mixin = (mssMix) -> (mss) -> mss <<<< mssMix
 
 # a helper for directional css property de-shorthand, eg margin, padding...
 MSS.DirectionVal = (directions, props, vArr, unit, propsDirections = [\Top \Right \Bottom \Left]) -> (mss) -> mss
-    if (i = directions.indexOf(\T)) != -1
-        ..[ props + propsDirections[0] ]= if v = vArr[i] then v + unit else 0
-    if (i = directions.indexOf(\R)) != -1
-        ..[ props + propsDirections[1] ]= if v = vArr[i] then v + unit else 0
-    if (i = directions.indexOf(\B)) != -1
-        ..[ props + propsDirections[2] ]= if v = vArr[i] then v + unit else 0
-    if (i = directions.indexOf(\L)) != -1
-        ..[ props + propsDirections[3] ]= if v = vArr[i] then v + unit else 0
+    <[T R B L]>.map (dir, index) ->
+        if (i = directions.indexOf dir) != -1
+            ..[ props + propsDirections[index] ] = if v = vArr[i] then v + unit else 0
 
 # size shorthand
 MSS.Size = (width, height) -> (mss) -> mss
@@ -210,10 +214,10 @@ MSS.Mar = (directions = '', ...v) ->
 MSS.MarPc = (directions = '', ...v) ->
     MSS.DirectionVal directions, \margin, v, \%
 
-MSS.AllMar = (...v) -> (mss) -> mss
+MSS.AMar = (...v) -> (mss) -> mss
     ..margin = MSS.px ...v
 
-MSS.AllMarPc = (...v) -> (mss) -> mss
+MSS.AMarPc = (...v) -> (mss) -> mss
     ..margin = MSS.pc ...v
 
 # padding shorthand
@@ -223,21 +227,19 @@ MSS.Pad = (directions = '', ...v) ->
 MSS.PadPc = (directions = '', ...v) ->
     MSS.DirectionVal directions, \padding, v, \%
 
-MSS.AllPad = (...v) -> (mss) -> mss
+MSS.APad = (...v) -> (mss) -> mss
     ..padding = MSS.px ...v
 
-MSS.AllPadPc = (...v) -> (mss) -> mss
+MSS.APadPc = (...v) -> (mss) -> mss
     ..padding = MSS.pc ...v
 
 # border shorthand
-MSS.Border = (directions = '', width = 0, color = \#eee, borderStyle = \solid) -> (mss) -> mss
+MSS.Border = (directions = '', width = 1, color = \#eee, borderStyle = \solid) ->
     style = "#{width}px #borderStyle #color"
-    if directions.indexOf(\T) != -1 then ..borderTop    = style
-    if directions.indexOf(\R) != -1 then ..borderRight  = style
-    if directions.indexOf(\B) != -1 then ..borderBottom = style
-    if directions.indexOf(\L) != -1 then ..borderLeft   = style
+    v = [style, style, style, style]
+    MSS.DirectionVal directions, \border, v, ''
 
-MSS.AllBorder =  (width = 0, color = \#eee, borderStyle = \solid) -> (mss) -> mss
+MSS.ABorder =  (width = 0, color = \#eee, borderStyle = \solid) -> (mss) -> mss
     ..border = "#{width}px #borderStyle #color"
 
 # border radius
@@ -251,10 +253,10 @@ MSS.BorderRadiusPc = (directions = '', ...v) -> (mss) ->
     MSS.DirectionVal directions, \border, v, \%, [\TopLeftRadius \TopRightRadius \BottomLeftRadius \TopLeftRadius] |>
     MSS.DirectionVal directions, \border, v, \%, [\TopRightRadius \BottomRightRadius \BottomRightRadius \BottomLeftRadius]
 
-MSS.AllBorderRadius = (...v) -> (mss) -> mss
+MSS.ABorderRadius = (...v) -> (mss) -> mss
     ..borderRadius = MSS.px ...v
 
-MSS.AllBorderRadiusPc = (...v) -> (mss) -> mss
+MSS.ABorderRadiusPc = (...v) -> (mss) -> mss
     ..borderRadius = MSS.pc ...v
 
 # corner radius
@@ -295,10 +297,10 @@ MSS.RelPosPc = (directions = '', ...v) -> (mss) -> mss
     MSS.DirectionVal directions, '', v, \%, [\top, \right, \bottom, \left]  <| mss
 
 # transistion shorthand with default value
-MSS.Tran = (prop = \width, time = 0.2, type = \ease, delay = 0) -> (mss) -> mss
+MSS.Tran = (prop = '', time = 0.2, type = \ease, delay = 0) -> (mss) -> mss
     ..transition = "#prop #{time}s #type #{delay}s"
 
-MSS.TranMs = (prop = \width, time = 0.2, type = \ease, delay = 0) -> (mss) -> mss
+MSS.TranMs = (prop = '', time = 0.2, type = \ease, delay = 0) -> (mss) -> mss
     ..transition = "#prop #{time}ms #type #{delay}ms"
 
 # inline block with float extension and ie fix
@@ -358,6 +360,15 @@ MSS.Arrow = (directions, width, color) -> (mss) ->
     if directions.indexOf(\L) != -1
         MSS.Border width, color, \R <| MSS.Border width, \transparent, \TLB <| mss
 
+# css3 animate
+MSS.Animate = (name, time = 1, type = \linear, delay = 0, iter = 1,  direction = \normal, fill = \none, state = \running) ->
+    (mss) -> mss
+        ..animate = "#name #{time}s #type #{delay}ms #iter #direction #fill #state"
+
+MSS.AnimateMs = (name, time = 1, type = \linear, delay = 0, iter = 1,  direction = \normal, fill = \none, state = \running) ->
+    (mss) -> mss
+        ..animate = "#name #{time}ms #type #{delay}ms #iter #direction #fill #state"
+
 #########################################      #   #    ########
 # mixins end with $ dont need arguments #    # # # #    ########
 #########################################  #   #   #    ########
@@ -395,30 +406,6 @@ MSS.ClearFix$ = (mss) -> mss
 #########################################      #   #    ########
 # UPPERCASE -> BOMBs, use with CAUTIONs!     # # # #    ########
 #########################################  #   #   #    ########
-
-# wrap a mss object into a MEDIA query, example:
-# MSS.MEDIA do
-#   all:
-#     maxWidth: \1200px
-#   _handheld:
-#     minWidth: \700px
-#   $tv:
-#     color: void
-# <|
-# ...
-#
-MSS.MEDIA = (queryObj) -> (mss) -> mss
-    queryStrArr = for mediaType, queryRules of queryObj
-        if mediaType[0] == \_ then mediaType = 'not ' + mediaType.slice 1
-        if mediaType[0] == \$ then mediaType = 'only ' + mediaType.slice 1
-        if queryRules
-            mediaType + ' and ' +
-            (for k, v of queryRules
-                \( + (MSS.parsePropName k) +
-                (if v then \: + v else '') + \)
-            ).join ' and '
-        else mediaType
-    ..MEDIA = "@media " + queryStrArr.join ','
 
 # MAP Mixin to a mss object's mss object, while preserve it's own CSS props
 # Mixin :: (mss) -> mss
@@ -488,5 +475,40 @@ MSS.LIFT = (Mixin, levelStart = 0, levelEnd = -1) -> (mss) ->
         else
             newMss[key] = mss[key]
     newMss
+
+# wrap a mss object into a MEDIA query, example:
+# MSS.MEDIA do
+#   all:
+#     maxWidth: \1200px
+#   _handheld:
+#     minWidth: \700px
+#   $tv:
+#     color: void
+# <|
+# ...
+#
+MSS.MEDIA_QUERY = (queryObj) -> (mss) ->
+    queryStrArr = for mediaType, queryRules of queryObj
+        if mediaType[0] == \_ then mediaType = 'not ' + mediaType.slice 1
+        if mediaType[0] == \$ then mediaType = 'only ' + mediaType.slice 1
+        if queryRules
+            mediaType + ' and ' +
+            (for k, v of queryRules
+                \( + (MSS.parsePropName k) +
+                (if v then \: + v else '') + \)
+            ).join ' and '
+        else mediaType
+    ('@media ' + queryStrArr.join ','): mss
+
+# better normalized KeyFrames
+MSS.KEY_FRAMES = (name) -> (mss) ->
+    keyFramesObj = {}
+    max = 0
+    for k of mss
+        max = Math.max max, Number.parseFloat k
+    for k, v of mss
+        keyFramesObj[ (Number.parseFloat k)*100/max + '%' ] = v
+
+    "@keyframes #name": keyFramesObj
 
 module.exports = MSS
