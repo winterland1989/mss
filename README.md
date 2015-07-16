@@ -1,12 +1,12 @@
-## MSS: Messed up Style Sheet
+## mss: messed up style sheet
 
-Write CSS in a functional way with [LiveScript](http://livescript.net), Inspired by [Clay CSS compiler](http://fvisser.nl/clay/)
+Write CSS in a functional way with [coffeescript](http://coffeescript.org)
 
-See [Document and online compiler](http://winterland1989.github.io/MSS)
+See [Document and online compiler](http://winterland1989.github.io/mss)
 
-### How does MSS look like?
+### How does mss look like?
 
-The online compiler's page's style is powered by MSS, here is the source code:
+The online compiler's page's style is powered by mss, here is the source code:
 
 ```ls
 i.mss = let @ = MSS

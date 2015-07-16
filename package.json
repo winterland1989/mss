@@ -1,0 +1,10 @@
+{
+  "name": "mss",
+  "version": "0.2.0",
+  "private": true,
+  "dependencies": {
+  },
+  "devDependencies": {
+    "coffee-script": "^1.9.3"
+  }
+}
