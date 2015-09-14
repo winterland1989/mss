@@ -21,7 +21,7 @@
   });
 
   m.request({
-    url: 'README.md.html',
+    url: 'https://github.com/winterland1989/mss/blob/master/README.md',
     method: 'GET',
     deserialize: function(data) {
       return marked(data);

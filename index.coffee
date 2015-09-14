@@ -21,7 +21,7 @@ marked.setOptions highlight: (code) ->
     hljs.highlightAuto(code).value
 
 m.request(
-    url: 'README.md.html'
+    url: 'https://github.com/winterland1989/mss/blob/master/README.md'
     method: 'GET'
     deserialize: (data) ->
         marked data
