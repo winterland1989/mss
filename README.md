@@ -394,17 +394,17 @@ There're two very special Mixins that can be used as example show mss turn `@` r
 mss
 
 ```coffee
-myMedia = mss.MediaQuery
-    all:
-       maxWidth: '1200px'
-    _handheld:
-       minWidth: '700px'
-    $tv:
-       color: '#red'
+myMedia = mss.MediaQuery(
+        all:
+           maxWidth: '1200px'
+        _handheld:
+           minWidth: '700px'
+        $tv:
+           color: '#red'
+    )
+        Content: 
+            width: '960px'
 
-myMedia
-    Content: 
-        width: '960px'
 ```
 
 css
@@ -417,7 +417,7 @@ css
 }
 ```
 
-The rules of `MediaQuery` is: use `_` to standfor `not` and `$` to standfor `only`, that's all.  And we got `KeyFrames` too:
+The rules of `MediaQuery` is: use `_` for `not` and `$` for `only`, that's all. We got `KeyFrames` too:
 
 mss
 
@@ -448,7 +448,7 @@ css
 }
 ```
 
-The keys are numbers and normalized to pencentage, so you can just write them in proportion.
+The keys are numbers that will be normalized to pencentage, so you can just write them in proportion.
 
 Other functions
 ---------------
@@ -511,7 +511,7 @@ s.unTag(styleTag)                     # remove the styleTag node
 
 Use mss with some declarative ui frameworks such as [React](https://facebook.github.io/react/) [mithril](https://github.com/lhorie/mithril.js) or [mecury](https://github.com/Raynos/mercury) to keep web component modular and composable, the basic idea is that a component should manage its own DOM and CSS, and since mss is just plain object or array of objects, it's trivial to nest small component into larger one.
 
-Take following `Dialog` in `mithril` as an example:
+An easy way to do this is providing a function for mss along aside your DOM templete, and call children's mss function inside the parent one just like how you compose the DOM, take following `Dialog` written using [mithril](https://github.com/lhorie/mithril.js) as an example:
 
 ```coffee
 class Dialog
