@@ -1,5 +1,5 @@
 assert = require 'assert'
-s = require './dist/mss.js'
+s = require './mss'
 
 {log, error: err} = console
 test = (desc, t) ->
@@ -87,3 +87,40 @@ test 'array parse', ->
             ]
         ' #foo{color:red;} .Bar{padding:2px;}'
     )
+
+test 'TRAVERSE', ->
+    testMss =
+        Foo:
+            p:
+                otherProp: '...'
+            Bar:
+                otherProp: '...'
+                span:
+                    background: "url('debug.png')"
+
+    mssFn = (selector, mss) ->
+        if selector == 'Bar'
+            mss.padding = '2px'
+        mss
+
+    propFn = (propName, propValue) ->
+        if propName == 'background'
+            propValue.replace(/^url\(.+\)$/g, 'product.png')
+        else propValue
+
+    assert.deepEqual(
+            s.TRAVERSE(testMss, mssFn, propFn)
+        ,   Foo:
+                p:
+                    otherProp: '...'
+                Bar:
+                    otherProp:'...'
+                    span:
+                        background: 'product.png'
+
+                    padding: '2px'
+        )
+
+
+
+

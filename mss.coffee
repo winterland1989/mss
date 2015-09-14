@@ -216,14 +216,6 @@ LineSize = (lineHeight, fontS) -> (mss) ->
         mss.fontSize = fontS
     mss
 
-# css3 animate
-Animate = (name, time, type = 'linear', delay = '0s', iter = 1, direction, fill, state) -> (mss) ->
-    mss.animate = "#{name} #{time} #{type} #{delay} #{iter}" +
-        (if direction? then direction else '') +
-        (if fill? then fill else '') +
-        (if state? then state else '')
-    mss
-
 # wrap a mss object into a MEDIA query, example:
 # MediaQuery
 #   all:
@@ -281,20 +273,17 @@ ClearFix$ = (mss) ->
     mss
 
 #########################################      #   #    ########
-# UPPERCASE -> BOMBs, use with CAUTIONs!     # # # #    ########
+# UPPERCASE ->        use with CAUTIONs!     # # # #    ########
 #########################################  #   #   #    ########
 
-TRAVERSE = (
-        mss,
-        mssFn = (k,v) -> v,
-        propFn = (k,v) -> v
-    ) ->
+TRAVERSE = (mss, mssFn = ((k,v) -> v), propFn = ((k,v) -> v)) ->
     newMss = {}
     for k, v of mss
         newMss[k] =
             if typeof v is 'object'
-                TRAVERSE (mssFn k v), mssFn, propFn
+                TRAVERSE((mssFn k, v), mssFn, propFn)
             else propFn(k, v)
+    newMss
 
 mss = {
     tag
@@ -326,7 +315,6 @@ mss = {
     PosRel
     LineSize
 
-    Animate
     MediaQuery
     KeyFrames
 

@@ -202,6 +202,8 @@ css
         background: #ff0000;
     } 
 
++ Selectors begin with `@` are preserved to make media query and keyframe composable, see [here](https://github.com/winterland1989/mss#special-mixins)
+
 Functions and Mixins
 --------------------
 
@@ -297,102 +299,156 @@ var Padding = function(pad) {
 
 ```
 
-Here's some built-in mixins:
+Here's some built-in mixins with their equivalent mss:
 
 ```coffee
-(
-    Foo: Vendor('borderRadius')
-        borderRadius: '2px' 
-) == (
-    Foo: Vendor('borderRadius')
-        mozBorderRadius: '2px'
-        WebkitBorderRadius: '2px'
-        MsBorderRadius: '2px'
-        borderRadius: '2px'
-)
+# Vendor add vendor prefix to given property
+Foo: Vendor('borderRadius')
+    borderRadius: '2px' 
 
-(
-    Foo: Mixin(padding:'2px')
-        otherProp: '...' 
-) == (
-    Foo:
-        padding: '2px'
-        otherProp: '...'
-)
+Foo:
+    mozBorderRadius: '2px'
+    WebkitBorderRadius: '2px'
+    MsBorderRadius: '2px'
+    borderRadius: '2px'
 
-(
-    Foo: Size('200px', '100%')
+# Mixin mix another mss object
+Foo: Mixin(padding:'2px')
         otherProp: '...' 
-) == (
-    Foo:
-        width: '200px'
-        height: '100%'
-        otherProp: '...'
-)
 
-(
-    Foo: PosAbs('10px', '10px', 0, 0)
-        otherProp: '...' 
-) == (
-    Foo:
-        position: 'absolute'
-        top: '10px'
-        right: '10px'
-        bottom: 0
-        left: 0
-        otherProp: '...'
-)
+Foo:
+    padding: '2px'
+    otherProp: '...'
 
-(
-    Foo: PosRel('10px', '10px', 0, 0)
-        otherProp: '...' 
-) == (
-    Foo:
-        position: 'relative'
-        top: '10px'
-        right: '10px'
-        bottom: 0
-        left: 0
-        otherProp: '...'
-)
+# Size are shorthand for width and height
+Foo: Size('200px', '100%')
+    otherProp: '...' 
 
-(
-    Foo: LineSize('14px', '10px')
-        otherProp: '...' 
-) == (
-    Foo:
-        height: '14px'
-        lineHeight: '14px'
-        fontSize: '10px'
-        otherProp: '...'
-)
+Foo:
+    width: '200px'
+    height: '100%'
+    otherProp: '...'
 
-(
-    Foo: TextEllip$
-        otherProp: '...' 
-) == (
-    Foo:
-        whiteSpace = 'nowrap'
-        overflow = 'hidden'
-        textOverflow = 'ellipsis'
-        otherProp: '...'
-)
+# PosAbs set position to absolute and set top, right, bottom, left in arguments order.
+Foo: PosAbs('10px', '10px', 0, 0)
+    otherProp: '...' 
 
-(
-    Foo: ClearFix$
-        otherProp: '...' 
-) == (
-    Foo:
-        '*zoom': 1
-        $before_$after:
-            content: "''"
-            display: 'table'
-        $after:
-            clear: 'both'
-        otherProp: '...'
-)
+Foo:
+    position: 'absolute'
+    top: '10px'
+    right: '10px'
+    bottom: 0
+    left: 0
+    otherProp: '...'
+
+# Same as PosAbs
+Foo: PosRel('10px', '10px', 0)
+    otherProp: '...' 
+
+Foo:
+    position: 'relative'
+    top: '10px'
+    right: '10px'
+    bottom: 0
+    otherProp: '...'
+
+# LineSize set height = lineHeight = first argument, and fontSize = second
+Foo: LineSize('14px', '10px')
+    otherProp: '...' 
+
+Foo:
+    height: '14px'
+    lineHeight: '14px'
+    fontSize: '10px'
+    otherProp: '...'
+
+# TextEllip$ make ellipsis text easy
+Foo: TextEllip$
+    otherProp: '...' 
+
+Foo:
+    whiteSpace = 'nowrap'
+    overflow = 'hidden'
+    textOverflow = 'ellipsis'
+    otherProp: '...'
+
+# ClearFix$, well... just classic ClearFix
+Foo: ClearFix$
+    otherProp: '...' 
+
+Foo:
+    '*zoom': 1
+    $before_$after:
+        content: "''"
+        display: 'table'
+    $after:
+        clear: 'both'
+    otherProp: '...'
+```
+
+Special mixins
+--------------
+
+There're two very special Mixins that can be used as example show mss turn `@` rules into composable functions:
+
+mss
+
+```coffee
+myMedia = mss.MediaQuery
+    all:
+       maxWidth: '1200px'
+    _handheld:
+       minWidth: '700px'
+    $tv:
+       color: '#red'
+
+myMedia
+    Content: 
+        width: '960px'
+```
+
+css
+
+```css
+@media all and (max-width:1200px),not handheld and (min-width:700px),only tv and (color:#red){
+     .Content{
+      width:960px;
+    }
+}
+```
+
+The rules of `MediaQuery` is: use `_` to standfor `not` and `$` to standfor `only`, that's all.  And we got `KeyFrames` too:
+
+mss
+
+```coffee
+mss.KeyFrames('myKeyFrameAnima')
+    10: 
+        top: '20px'
+    20:
+        top: '40px'
+    30:
+        top: '50px'
 
 ```
+
+css
+
+```css
+@keyframes myKeyFrameAnima{
+    33.333333333333336%{
+        top:20px;
+    }
+    66.66666666666667%{
+        top:40px;
+    }
+    100%{
+        top:50px;
+    }
+}
+```
+
+The keys are numbers and normalized to pencentage, so you can just write them in proportion.
 
 Other functions
 ---------------
@@ -400,7 +456,7 @@ Other functions
 You can define other functions to achieve more powerful effect easily based on mss's nested object presentation, here comes a simple built-in function `TRAVERSE`, it's UPPER_CASE to distinguish from functions and mixins, it can be used in some interesting situations such as substitute all static assets' url.
 
 ```coffee
-mss =
+originMss =
     Foo:
         p:
             otherProp: '...'
@@ -419,7 +475,7 @@ propFn = (propName, propValue) ->
         propValue.replace(/^url\(.+\)$/g, 'product.png')
     else propValue
 
-TRAVERSE(mss, mssFn, propFn) ==
+TRAVERSE(originMss, mssFn, propFn) ==
     Foo:
         p:
             otherProp: '...'
