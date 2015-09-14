@@ -1,7 +1,7 @@
 MSS: messed up style sheet
 ==========================
 
-Write CSS in a functional way with pure javascript.  Check out the [online compiler](http://winterland1989.github.io/mss).
+Write modular, composable CSS in a functional way with pure javascript.  Check out the [online compiler](http://winterland1989.github.io/mss).
 
 Intro
 -----
@@ -72,8 +72,7 @@ mss =
 console.log MSS.parse(mss, true)
 ```
 
-Much nicer! For the sake of clearity, following example will be written in coffee, sorry for the inconveince.
-Let's explain how mss translate your plain object into a css string in detail:
+Much nicer! For the sake of clearity, following example will be written in coffee, really sorry for the inconveince, but coffeescript's object literal is very easy to read. Let's explain how mss translate your plain object into a css string in detail:
 
 Rules for parsing a mss selectors
 ---------------------------------
@@ -158,23 +157,60 @@ css
     }
 
 Notes
-----
+-----
 
-+ You can use an array of mss as a mss object, and mss will first merge all the element(last with hightest precedence)
++ You can use an array of mss as a mss object, and mss will merge all the elements first(from the first to last order, so the last one with the hightest precedence), this's very handy when you want to compose nested mss.
 
-+ Number values can be use as property values, eg. `margin: 0` will be parsed as `margin: '0'`
+mss
+
+    otherMss =
+        OtherWidget:
+                margin: '2px'
+
+    Foo: [
+            padding: '10px'
+            Bar:
+                color: '#ddd'
+        ,    
+            otherMss
+        ]
+
+css
+    
+    .Foo{
+        padding: 10px;
+    }
+    .Foo Bar{
+        color: '#ddd';
+    }
+    .Foo .OtherWidget{
+        margin: '2px';
+    }
+
++ Number values can be use as property values, they will be converted to string, eg. `margin: 0` will be parsed as `margin: '0'`, so if you want to add unit, write string literals like `'2px'` or `'10%'`.
+
++ While the selector's syntax covered most of the cases in basic modular css design, You can alway fallback to write a real css selector using string literal as key:
+
+mss
+
+    '.css-selector:nth-child(2)':
+        background: '#ff0000';
+
+css
+
+    .css-selector::nth-child(2){
+        background: #ff0000;
+    } 
 
 Functions and Mixins
 --------------------
 
-Here comes the fun part, since the plain mss object you write is actual a simplified CSS AST, so all mixins can be write in plain javascript.
-
+Here comes the fun part, since the plain mss object you write is actual a simplified CSS AST, so all functions and mixins can be write in plain javascript.
 
 Functions
 ---------
 
 Since all property are strings, we can write a function to help us convert between numbers and string, for example:
-
 
 mss
 
@@ -192,7 +228,7 @@ css
         padding 10% 10%;
     }
  
-There's lots of functions are built-in in MSS, they are written in camelCase, such as `px` or `hsl`, and they are much general, for example the built-in `px` function can take multiple arguments, here's list:
+There's some functions built-in with mss, they are written in camelCase, such as `px` or `hsl`, and often they are quite general, for example the built-in `px` function can take multiple arguments, here's built-in list:
 
 ```coffee
 num           # num('2px') == 2
@@ -207,13 +243,13 @@ rgb           # rgb(0, 128, 255) == 'rgb(0,128,255)'
 rgba          # rgba(0, 128, 255, 0.2) == 'rgba(0,128,255,0.2)'
 bw            # bw(128) == 'rgb(128,128,128)'
 hsl           # same as rgb, h: 0~360, s: 0~100, l: 0~100
-hsla          # same as rgb, h: 0~360, s: 0~100, l: 0~100 a: 0.0~1.0
+hsla          # same as rgba, h: 0~360, s: 0~100, l: 0~100 a: 0.0~1.0
 ```
 
 Mixins
 ------
 
-Mixins are special functions, they should take some parameters(or none), then return a function that modify mss object, let's write one:
+Mixins are special functions, they should take some parameters(or none if don't need), then return a function that modify mss objects, let's write one:
 
 mss
 
@@ -237,7 +273,31 @@ css
         text-align: 'center';
     }
 
-Built-in mixins:
+The mixins are totally composable because they have the same type: take a mss, return a modified mss back, notice how the coffeescript shine here, if you choose to write javascript, you have to take care of the nest function application carefully:
+
+```javascript
+
+var Center$ = function(mss) {
+  mss.textAlign = 'center';
+  return mss;
+};
+
+var Padding = function(pad) {
+  return function(mss) {
+    mss.padding = pad;
+    return mss;
+  };
+};
+
+{
+  input: Center$(Padding('2px')({
+    margin: 0
+  }))
+}
+
+```
+
+Here's some built-in mixins:
 
 ```coffee
 (
@@ -337,7 +397,7 @@ Built-in mixins:
 Other functions
 ---------------
 
-You can define other functions to achieve more powerful effect, here's built-in functions written in UPPER_CASE can be used in some advanced situations.
+You can define other functions to achieve more powerful effect easily based on mss's nested object presentation, here comes a simple built-in function `TRAVERSE`, it's UPPER_CASE to distinguish from functions and mixins, it can be used in some interesting situations such as substitute all static assets' url.
 
 ```coffee
 mss =
@@ -374,9 +434,28 @@ TRAVERSE(mss, mssFn, propFn) ==
 Applications
 ------------
 
-I use mss combine with [mithril](https://github.com/lhorie/mithril.js) to keep web component modular and composable, the basic idea is that a component should manage its own DOM and CSS. Since mss is just plain object or array of objects, it's trivial to nest component into larger component.
+Mss provide some basic functions to parse an mss object, insert them to DOM, update, or remove from DOM:
 
-Take following `Dialog` for example:
+```coffee
+s = mss
+
+myStyle =
+    body:
+        width: '640px'
+
+console.log(s.parse(myStyle))         # parse a mss object into a string.
+console.log(s.parse(myStyle, true))   # parse a mss object into a string with prettify.
+
+styleTag = s.tag(myStyle)             # insert the style to <head>, return the <style> tag's node.
+styleTag = s.tag(myStyle, 'myStyle')  # insert the style to <head> with id=myStyle, return tag's node.
+
+s.retag(myStyle2, styleTag)           # update the styleTag node's style with new mss object
+s.unTag(styleTag)                     # remove the styleTag node
+```
+
+Use mss with some declarative ui frameworks such as [React](https://facebook.github.io/react/) [mithril](https://github.com/lhorie/mithril.js) or [mecury](https://github.com/Raynos/mercury) to keep web component modular and composable, the basic idea is that a component should manage its own DOM and CSS, and since mss is just plain object or array of objects, it's trivial to nest small component into larger one.
+
+Take following `Dialog` in `mithril` as an example:
 
 ```coffee
 class Dialog
@@ -417,7 +496,7 @@ BiggerDialog.mss = (bgColor, childDialogBgColor) ->
         ]
 ```
 
-The online compiler's page's style is powered by mss(written in coffeescript), here is the source code:
+BTW. The online compiler's page's style is powered by mss(written in coffeescript), here is the source code for amusing:
 
 ```coffee
 s = mss
@@ -542,3 +621,4 @@ $I: s.PosRel(0, 0)(s.Size('100%', '100%')({
 }))
 
 ```
+That'all, happy hacking!
