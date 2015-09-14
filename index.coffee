@@ -3,72 +3,99 @@ s = window.mss
 docHTML = '<h1>Loading...</h1>'
 parseHint = 'Please type your mss ^^^'
 
-mssInput = ''
+mssInput =
+"""
+Foo:
+    margin: '2px'
+    $hover:
+        color: '#fff'
+
+MixinTest: mss.Size('100%', '100%') mss.TextEllip$
+    otherProp: '...'
+
+"""
+parseHint = ''
 mssOutput = ''
 
 marked.setOptions highlight: (code) ->
     hljs.highlightAuto(code).value
 
 m.request(
-  url: 'README.md.html'
-  method: 'GET'
-  deserialize: (data) ->
-    marked data
+    url: 'README.md.html'
+    method: 'GET'
+    deserialize: (data) ->
+        marked data
 ).then (html) ->
     docHTML = html
 
-m.module document.body, view: ->
-    m '#i'
-    ,   m '.doc', m.trust(docHTML)
-    ,   m '.liveParser'
-        ,   m 'textarea.mssInput' ,
-                value: mssInput
-                onkeydown: (e) ->
-                    if e.keyCode != 9
-                        e.preventDefault()
-                        self = h.eElem(e)
-                        selStart = self.selectionStart
-                        self.value = self.value.substring(0, selStart) + '    ' + self.value.substring(selStart)
-                        self.selectionStart = self.selectionEnd = selStart + 4
-                        m.redraw.strategy('none')
+onInputKeyDown = (e) ->
+    if e.keyCode == 9
+        e.preventDefault()
+        self = e.target
+        selStart = self.selectionStart
+        self.value = self.value.substring(0, selStart) + '    ' + self.value.substring(selStart)
+        self.selectionStart = self.selectionEnd = selStart + 4
+        m.redraw.strategy('none')
 
-                onkeyup: (e) ->
-                    srcLs = undefined
-                    mssInput = h.eElem(e).value
-                    srcLs = 'window.mssInputObj = \n' + mssInput
+onInputInput = (e) ->
+    mssInput = e.target.value
+    evalMss e.target.value
 
-                    CoffeeScript.eval srcLs, (err) ->
-                        if err
-                            lineNumberRegex = /line (\d+)\:/
-                            errMsg = err.toString()
-                            errMsg = errMsg.replace(lineNumberRegex, (matched, digits) ->
-                                'line ' + parseInt(digits) - 1 + ':'
-                            )
-                            parseHint = errMsg
-                        else if typeof window.mssInputObj == 'object'
-                            parseHint = 'Look NICE!'
-                            mssOutput = s.parse(window.mssInputObj, true)
+evalMss = (src) ->
+    try
+        CoffeeScript.eval 'window.mssInputObj = \n' + src
+        parseHint = 'Look NICE!'
+        mssOutput = s.parse(window.mssInputObj, true)
+    catch err
+        lineNumberRegex = /line (\d+)\:/
+        errMsg = err.toString()
+        errMsg = errMsg.replace(lineNumberRegex, (matched, digits) ->
+            'line ' + parseInt(digits) - 1 + ':'
+        )
+        parseHint = errMsg
 
-            ,   m '.parseHint', parseHint
-            ,   m 'textarea.mssOutput',
-                    disabled: true
-                    value: mssOutput
+evalMss mssInput
 
-FullSize$ = s.Size('100%', '100%')
-HalfWidth$ = s.Size('100%', '50%')
+mssLiveDoc = view: ->
+    m '#i', [
+            m '.Doc', m.trust(docHTML)
+        ,
+            m '.LiveParser', [
+                    m 'textarea.MssInput' ,
+                        value: mssInput
+                        onkeydown: onInputKeyDown
+                        oninput: onInputInput
+                ,
+                    m '.ParseHint', parseHint
+                ,
+                    m 'textarea.MssOutput',
+                            disabled: true
+                            value: mssOutput
+                ]
+        ]
+
 
 s.tag
     html_body: s.Size('100%', '100%')
         overflow: 'hidden'
-    $I: s.RelPos() s.Size('100%', '100%')
+        fontSize: '14px'
+    $I: s.PosRel(0, 0) s.Size('100%', '100%')
         background: '#eee'
-        doc: s.AbsPos(0, '50%', 0 , 0) HalfWidth$
+        Doc: s.PosAbs(0, '50%', 0 , 0)  s.Size('46%', '100%')
+            padding: '2%'
             overflow: 'scroll'
 
-        liveParser: s.AbsPosPc(0, 0, 0, '50%') HalfWidth$
-            mssInput: s.SizePc(100, 45)
+        LiveParser: s.PosAbs(0, 0, 0, '50%') s.Size('46%', '96%')
+            padding: '2%'
+            MssInput_MssOutput:
+                border: '1px solid #ccc'
+                background: '#fff'
+                fontSize: '1em'
+            MssInput: s.Size('100%', '44%')
                 background: '#F5F2F0'
-            parseHint: s.Size('100%', '2%')
+            ParseHint: s.Size('100%', '2%')
                 padding: '2%'
-            mssOutput: s.SizePc(100, 45)
+            MssOutput: s.Size('100%', '44%')
                 background: '#F5F2F0'
+
+m.mount document.body, mssLiveDoc

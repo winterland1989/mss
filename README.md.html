@@ -9,10 +9,13 @@ Intro
 MSS.parse takes a mss object as input and output a css string
 
 + A mss object is a plain javascript object, usually nested
+
 + A key will be a CSS selector if its value is another mss object, otherwise it will be taken as a property name for CSS
+
 + MSS will parse the nested object into nested selectors by connnecting selectors into a descendant selector
 
 Let's see an example:
+
 ```javascript
 mss = {
   FooClass: {
