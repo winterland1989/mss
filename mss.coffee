@@ -165,18 +165,6 @@ hsl = (h, s, l) -> "hsl(#{h},#{s}%,#{l}%)"
 # hsla color, hue: 0~360, saturation: 0~100, lightness: 0~100, alpha: 0.0~1.0
 hsla = (r, g, b, a) -> "hsla(#{h},#{s}%,#{l}%,#{a})"
 
-# css3 gradient functions
-# linear gradient
-linearGrad = (sideOrAngle, stops) ->
-    "linear-gradient(#sideOrAngle,#{stops.join ','})"
-
-# radial gradient
-radialGrad = (stops) ->
-    "radial-gradient(#{stops.join ','})"
-
-# repeat gradient
-repeatGrad = (sideOrAngle, stops) ->
-    "repeat-gradient(#sideOrAngle,#{stops.join ','})"
 
 #########################################      #   #    ########
 # method start with UpperCase -> mixins      # # # #    ########
@@ -333,18 +321,14 @@ mss = {
     rgb
     bw
     rgba
+    hsl
     hsla
-
-    linearGrad
-    radialGrad
-    repeatGrad
 
     Vendor
     Mixin
     Size
     PosAbs
     PosRel
-
     LineSize
     TouchScroll
 
@@ -355,6 +339,7 @@ mss = {
     TextEllip$
     ClearFix$
 
+    TRAVERSE
 }
 
 if module? and  module.exports?
