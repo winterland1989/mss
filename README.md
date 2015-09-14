@@ -10,7 +10,7 @@ MSS.parse takes a mss object as input and output a css string
 
 + A mss object is a plain javascript object, usually nested
 
-+ A key will be a CSS selector if its value is another mss object, otherwise it will be taken as a property name for CSS
++ A key will be a CSS selector if its value is another mss object, otherwise it will be taken as a property name for CSS.
 
 + MSS will parse the nested object into nested selectors by connnecting selectors into a descendant selector
 
@@ -157,6 +157,13 @@ css
         -moz-box-shadow: 10px 10px 5px #888888;
     }
 
+Notes
+----
+
++ You can use an array of mss as a mss object, and mss will first merge all the element(last with hightest precedence)
+
++ Number values can be use as property values, eg. `margin: 0` will be parsed as `margin: '0'`
+
 Functions and Mixins
 --------------------
 
@@ -188,19 +195,19 @@ css
 There's lots of functions are built-in in MSS, they are written in camelCase, such as `px` or `hsl`, and they are much general, for example the built-in `px` function can take multiple arguments, here's list:
 
 ```coffee
-    num           # num('2px') == 2
-    unit          # unit('2%') == '%'
-    px            # px(1, 2, 3) == '1px, 2px, 3px'
-    pc            # pc(1, 2, 3) == '1%, 2%, 3%'
-    
-    gold          # px(v) == Math.round(v*0.618), golden ratio caculator
-    goldR         # px(v) == Math.round(v/0.618), golden ratio caculator 2
+num           # num('2px') == 2
+unit          # unit('2%') == '%'
+px            # px(1, 2, 3) == '1px, 2px, 3px'
+pc            # pc(1, 2, 3) == '1%, 2%, 3%'
 
-    rgb           # rgb(0, 128, 255) == 'rgb(0,128,255)'
-    rgba          # rgba(0, 128, 255, 0.2) == 'rgba(0,128,255,0.2)'
-    bw            # bw(128) == 'rgb(128,128,128)'
-    hsl           # same as rgb, h: 0~360, s: 0~100, l: 0~100
-    hsla          # same as rgb, h: 0~360, s: 0~100, l: 0~100 a: 0.0~1.0
+gold          # px(v) == Math.round(v*0.618), golden ratio caculator
+goldR         # px(v) == Math.round(v/0.618), golden ratio caculator 2
+
+rgb           # rgb(0, 128, 255) == 'rgb(0,128,255)'
+rgba          # rgba(0, 128, 255, 0.2) == 'rgba(0,128,255,0.2)'
+bw            # bw(128) == 'rgb(128,128,128)'
+hsl           # same as rgb, h: 0~360, s: 0~100, l: 0~100
+hsla          # same as rgb, h: 0~360, s: 0~100, l: 0~100 a: 0.0~1.0
 ```
 
 Mixins
@@ -233,27 +240,182 @@ css
 Built-in mixins:
 
 ```coffee
-Vendor
-Mixin
-Size
-PosAbs
-PosRel
+(
+    Foo: Vendor('borderRadius')
+        borderRadius: '2px' 
+) == (
+    Foo: Vendor('borderRadius')
+        mozBorderRadius: '2px'
+        WebkitBorderRadius: '2px'
+        MsBorderRadius: '2px'
+        borderRadius: '2px'
+)
 
-LineSize
-TouchScroll
+(
+    Foo: Mixin(padding:'2px')
+        otherProp: '...' 
+) == (
+    Foo:
+        padding: '2px'
+        otherProp: '...'
+)
 
-TextEllip$
-ClearFix$
+(
+    Foo: Size('200px', '100%')
+        otherProp: '...' 
+) == (
+    Foo:
+        width: '200px'
+        height: '100%'
+        otherProp: '...'
+)
+
+(
+    Foo: PosAbs('10px', '10px', 0, 0)
+        otherProp: '...' 
+) == (
+    Foo:
+        position: 'absolute'
+        top: '10px'
+        right: '10px'
+        bottom: 0
+        left: 0
+        otherProp: '...'
+)
+
+(
+    Foo: PosRel('10px', '10px', 0, 0)
+        otherProp: '...' 
+) == (
+    Foo:
+        position: 'relative'
+        top: '10px'
+        right: '10px'
+        bottom: 0
+        left: 0
+        otherProp: '...'
+)
+
+(
+    Foo: LineSize('14px', '10px')
+        otherProp: '...' 
+) == (
+    Foo:
+        height: '14px'
+        lineHeight: '14px'
+        fontSize: '10px'
+        otherProp: '...'
+)
+
+(
+    Foo: TextEllip$
+        otherProp: '...' 
+) == (
+    Foo:
+        whiteSpace = 'nowrap'
+        overflow = 'hidden'
+        textOverflow = 'ellipsis'
+        otherProp: '...'
+)
+
+(
+    Foo: ClearFix$
+        otherProp: '...' 
+) == (
+    Foo:
+        '*zoom': 1
+        $before_$after:
+            content: "''"
+            display: 'table'
+        $after:
+            clear: 'both'
+        otherProp: '...'
+)
+
 ```
 
 Other functions
 ---------------
 
-You can define other functions to achieve more powerful effect, there're some built-in functions written in UPPER_CASE can be used in some advanced situations.
+You can define other functions to achieve more powerful effect, here's built-in functions written in UPPER_CASE can be used in some advanced situations.
 
+```coffee
+mss =
+    Foo:
+        p:
+            otherProp: '...'
+        Bar:
+            otherProp: '...'
+            span:
+                background: url('debug.png')
+
+mssFn = (selector, mss) ->
+    if selector == 'Bar'
+        mss.padding = '2px'
+    mss
+
+propFn = (propName, propValue) ->
+    if propName == 'background'
+        propValue.replace(/^url\(.+\)$/g, 'product.png')
+    else propValue
+
+TRAVERSE(mss, mssFn, propFn) ==
+    Foo:
+        p:
+            otherProp: '...'
+        Bar:
+            padding: '2px'
+            otherProp: '...'
+            span:
+                background: url('product.png')
+
+```
 
 Applications
 ------------
+
+I use mss combine with [mithril](https://github.com/lhorie/mithril.js) to keep web component modular and composable, the basic idea is that a component should manage its own DOM and CSS. Since mss is just plain object or array of objects, it's trivial to nest component into larger component.
+
+Take following `Dialog` for example:
+
+```coffee
+class Dialog
+    constructor: (...) ->
+    view: ->
+        m '.Dialog', '...'
+
+Dialog.mss = (bgColor) ->
+    Dialog:
+        background: color
+```
+
+You can easily embed it into another `BiggerDialog`:
+
+```coffee
+class BiggerDialog
+    constructor:
+        @childDialog = new Dialog(...)
+    view: ->
+        m '.BiggerDialog', [
+                childDialog.view()
+            ,   
+                m '.OtherThings', '...'
+            ,   
+                ...
+            ]
+
+BiggerDialog.mss = (bgColor, childDialogBgColor) ->
+    BiggerDialog: [
+            background: color
+    
+            OtherThings:
+                ...
+        ,   
+            Dialog.mss(childDialogBgColor)
+        ,   
+            ...
+        ]
+```
 
 The online compiler's page's style is powered by mss(written in coffeescript), here is the source code:
 

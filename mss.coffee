@@ -216,18 +216,6 @@ LineSize = (lineHeight, fontS) -> (mss) ->
         mss.fontSize = fontS
     mss
 
-# touch scroll
-TouchScroll = (x) -> (mss) ->
-    if x
-        mss.overflowX = 'scroll'
-    else
-        mss.overflowY = 'scroll'
-
-    mss.overflowScrolling = 'touch'
-    mss.WebkitOverflowScrolling = 'touch'
-    mss.MozOverflowScrolling = 'touch'
-    mss
-
 # css3 animate
 Animate = (name, time, type = 'linear', delay = '0s', iter = 1, direction, fill, state) -> (mss) ->
     mss.animate = "#{name} #{time} #{type} #{delay} #{iter}" +
@@ -296,10 +284,17 @@ ClearFix$ = (mss) ->
 # UPPERCASE -> BOMBs, use with CAUTIONs!     # # # #    ########
 #########################################  #   #   #    ########
 
-TRAVERSE = (mss, fn) ->
+TRAVERSE = (
+        mss,
+        mssFn = (k,v) -> v,
+        propFn = (k,v) -> v
+    ) ->
     newMss = {}
     for k, v of mss
-        newMss[k] = if typeof v is 'object' then (TRAVERSE v, fn) else (fn k, v)
+        newMss[k] =
+            if typeof v is 'object'
+                TRAVERSE (mssFn k v), mssFn, propFn
+            else propFn(k, v)
 
 mss = {
     tag
@@ -330,7 +325,6 @@ mss = {
     PosAbs
     PosRel
     LineSize
-    TouchScroll
 
     Animate
     MediaQuery
