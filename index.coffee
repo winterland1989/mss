@@ -1,4 +1,4 @@
-s = require('libs/mss.js', module)
+s = window.mss
 
 docHTML = '<h1>Loading...</h1>'
 parseHint = 'Please type your mss ^^^'
