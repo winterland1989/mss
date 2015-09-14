@@ -1,7 +1,7 @@
-MSS: Messed up Style Sheet
+MSS: messed up style sheet
 ==========================
 
-Write CSS in a functional way with pure javascript.
+Write CSS in a functional way with pure javascript.  Check out the [online compiler](http://winterland1989.github.io/mss).
 
 Intro
 -----
@@ -10,7 +10,7 @@ MSS.parse takes a mss object as input and output a css string
 
 + A mss object is a plain javascript object, usually nested
 
-+ A key will be a CSS selector if its value is another mss object, otherwise it will be taken as a property name for CSS
++ A key will be a CSS selector if its value is another mss object, otherwise it will be taken as a property name for CSS.
 
 + MSS will parse the nested object into nested selectors by connnecting selectors into a descendant selector
 
@@ -83,43 +83,49 @@ Rules for parsing a mss selectors
 + id selector is written in $UpperCase and turn into lowerCase
 
 mss
+
     Slider: 
         margin: ...
-css
-    .Slider { margin: ...}
 
-mss
     canvas: 
         margin: ...
-css
-    canvas { margin: ...}
 
-mss
     $Index:
         margin: ...
+
 css
+
+    .Slider { margin: ...}
+
+    canvas { margin: ...}
+
     #index { margin: ...}
 
 + `$` used to write pesudo-class selector:
 
 mss
+
     SliderBtn:
         padding: ...
         $hover:
             color: ...
+
 css
+
     .SliderBtn { padding: ... }
     .SliderBtn:hover { color: ... }
-```
 
 + `_` turn selector into a list of selectors, and you can nest list
 
 mss
+
     BlueBird_BlueOcean:
         color: \blue
         RedText_$RedWine_Span:
             color: \red
+
 css
+
     .BlueBird, 
     .BlueOcean {
         color: blue;
@@ -139,14 +145,24 @@ Rules for parsing a mss property name
 + turn `camelCase` to `camel-case` and `MyCamelCase` to `-my-camel-case`
 
 mss
+
     FooBar:
         marginLeft: \50%
         MozBoxShadow: '10px 10px 5px #888888'
+
 css
+
     .FooBar {
         margin-left: 50%;
         -moz-box-shadow: 10px 10px 5px #888888;
     }
+
+Notes
+----
+
++ You can use an array of mss as a mss object, and mss will first merge all the element(last with hightest precedence)
+
++ Number values can be use as property values, eg. `margin: 0` will be parsed as `margin: '0'`
 
 Functions and Mixins
 --------------------
@@ -176,9 +192,23 @@ css
         padding 10% 10%;
     }
  
-There's lots of functions are built-in in MSS, they are written in camelCase, such as `px` or `linearGrad`, and they are much general, for example the built-in `px` function can take multiple arguments.
+There's lots of functions are built-in in MSS, they are written in camelCase, such as `px` or `hsl`, and they are much general, for example the built-in `px` function can take multiple arguments, here's list:
 
+```coffee
+num           # num('2px') == 2
+unit          # unit('2%') == '%'
+px            # px(1, 2, 3) == '1px, 2px, 3px'
+pc            # pc(1, 2, 3) == '1%, 2%, 3%'
 
+gold          # px(v) == Math.round(v*0.618), golden ratio caculator
+goldR         # px(v) == Math.round(v/0.618), golden ratio caculator 2
+
+rgb           # rgb(0, 128, 255) == 'rgb(0,128,255)'
+rgba          # rgba(0, 128, 255, 0.2) == 'rgba(0,128,255,0.2)'
+bw            # bw(128) == 'rgb(128,128,128)'
+hsl           # same as rgb, h: 0~360, s: 0~100, l: 0~100
+hsla          # same as rgb, h: 0~360, s: 0~100, l: 0~100 a: 0.0~1.0
+```
 
 Mixins
 ------
@@ -207,10 +237,309 @@ css
         text-align: 'center';
     }
 
+Built-in mixins:
+
+```coffee
+(
+    Foo: Vendor('borderRadius')
+        borderRadius: '2px' 
+) == (
+    Foo: Vendor('borderRadius')
+        mozBorderRadius: '2px'
+        WebkitBorderRadius: '2px'
+        MsBorderRadius: '2px'
+        borderRadius: '2px'
+)
+
+(
+    Foo: Mixin(padding:'2px')
+        otherProp: '...' 
+) == (
+    Foo:
+        padding: '2px'
+        otherProp: '...'
+)
+
+(
+    Foo: Size('200px', '100%')
+        otherProp: '...' 
+) == (
+    Foo:
+        width: '200px'
+        height: '100%'
+        otherProp: '...'
+)
+
+(
+    Foo: PosAbs('10px', '10px', 0, 0)
+        otherProp: '...' 
+) == (
+    Foo:
+        position: 'absolute'
+        top: '10px'
+        right: '10px'
+        bottom: 0
+        left: 0
+        otherProp: '...'
+)
+
+(
+    Foo: PosRel('10px', '10px', 0, 0)
+        otherProp: '...' 
+) == (
+    Foo:
+        position: 'relative'
+        top: '10px'
+        right: '10px'
+        bottom: 0
+        left: 0
+        otherProp: '...'
+)
+
+(
+    Foo: LineSize('14px', '10px')
+        otherProp: '...' 
+) == (
+    Foo:
+        height: '14px'
+        lineHeight: '14px'
+        fontSize: '10px'
+        otherProp: '...'
+)
+
+(
+    Foo: TextEllip$
+        otherProp: '...' 
+) == (
+    Foo:
+        whiteSpace = 'nowrap'
+        overflow = 'hidden'
+        textOverflow = 'ellipsis'
+        otherProp: '...'
+)
+
+(
+    Foo: ClearFix$
+        otherProp: '...' 
+) == (
+    Foo:
+        '*zoom': 1
+        $before_$after:
+            content: "''"
+            display: 'table'
+        $after:
+            clear: 'both'
+        otherProp: '...'
+)
+
+```
 
 Other functions
 ---------------
 
-You can define other functions to achieve more powerful effect, there're some built-in functions written in UPPER_CASE, they're generally some functions operating on whole mss tree:
+You can define other functions to achieve more powerful effect, here's built-in functions written in UPPER_CASE can be used in some advanced situations.
 
+```coffee
+mss =
+    Foo:
+        p:
+            otherProp: '...'
+        Bar:
+            otherProp: '...'
+            span:
+                background: url('debug.png')
+
+mssFn = (selector, mss) ->
+    if selector == 'Bar'
+        mss.padding = '2px'
+    mss
+
+propFn = (propName, propValue) ->
+    if propName == 'background'
+        propValue.replace(/^url\(.+\)$/g, 'product.png')
+    else propValue
+
+TRAVERSE(mss, mssFn, propFn) ==
+    Foo:
+        p:
+            otherProp: '...'
+        Bar:
+            padding: '2px'
+            otherProp: '...'
+            span:
+                background: url('product.png')
+
+```
+
+Applications
+------------
+
+I use mss combine with [mithril](https://github.com/lhorie/mithril.js) to keep web component modular and composable, the basic idea is that a component should manage its own DOM and CSS. Since mss is just plain object or array of objects, it's trivial to nest component into larger component.
+
+Take following `Dialog` for example:
+
+```coffee
+class Dialog
+    constructor: (...) ->
+    view: ->
+        m '.Dialog', '...'
+
+Dialog.mss = (bgColor) ->
+    Dialog:
+        background: color
+```
+
+You can easily embed it into another `BiggerDialog`:
+
+```coffee
+class BiggerDialog
+    constructor:
+        @childDialog = new Dialog(...)
+    view: ->
+        m '.BiggerDialog', [
+                childDialog.view()
+            ,   
+                m '.OtherThings', '...'
+            ,   
+                ...
+            ]
+
+BiggerDialog.mss = (bgColor, childDialogBgColor) ->
+    BiggerDialog: [
+            background: color
+    
+            OtherThings:
+                ...
+        ,   
+            Dialog.mss(childDialogBgColor)
+        ,   
+            ...
+        ]
+```
+
+The online compiler's page's style is powered by mss(written in coffeescript), here is the source code:
+
+```coffee
+s = mss
+
+html_body: s.Size('100%', '100%')
+    overflow: 'hidden'
+    fontSize: '14px'
+$I: s.PosRel(0, 0) s.Size('100%', '100%')
+    background: '#eee'
+    Doc: s.PosAbs(0, '50%', 0 , 0)  s.Size('46%', '100%')
+        padding: '2%'
+        overflow: 'scroll'
+
+    LiveParser: s.PosAbs(0, 0, 0, '50%') s.Size('46%', '96%')
+        padding: '2%'
+        MssInput_MssOutput:
+            border: '1px solid #ccc'
+            background: '#fff'
+            fontSize: '1em'
+        MssInput: s.Size('100%', '44%')
+            background: '#F5F2F0'
+        ParseHint: s.Size('100%', '2%')
+            padding: '2%'
+        MssOutput: s.Size('100%', '44%')
+            background: '#F5F2F0'
+
+```
+
+The compiled CSS is directly inserted into DOM:
+
+```css
+html,
+body {
+    overflow: hidden;
+    font-size: 14px;
+    width: 100%;
+    height: 100%;
+}
+#i {
+    background: #eee;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    top: 0;
+    right: 0;
+}
+#i .Doc {
+    padding: 2%;
+    overflow: scroll;
+    width: 46%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 50%;
+    bottom: 0;
+    left: 0;
+}
+#i .LiveParser {
+    padding: 2%;
+    width: 46%;
+    height: 96%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 50%;
+}
+#i .LiveParser .MssInput,
+#i .LiveParser .MssOutput {
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 1em;
+}
+#i .LiveParser .MssInput {
+    background: #F5F2F0;
+    width: 100%;
+    height: 44%;
+}
+#i .LiveParser .ParseHint {
+    padding: 2%;
+    width: 100%;
+    height: 2%;
+}
+#i .LiveParser .MssOutput {
+    background: #F5F2F0;
+    width: 100%;
+    height: 44%;
+}
+```
+
+If you don't mind too much verbose here's javascript version:
+```javascript
+var s = mss;
+
+html_body: s.Size('100%', '100%')({
+    overflow: 'hidden',
+    fontSize: '14px'
+}),
+$I: s.PosRel(0, 0)(s.Size('100%', '100%')({
+    background: '#eee',
+    Doc: s.PosAbs(0, '50%', 0, 0)(s.Size('46%', '100%')({
+      padding: '2%',
+      overflow: 'scroll'
+    })),
+    LiveParser: s.PosAbs(0, 0, 0, '50%')(s.Size('46%', '96%')({
+        padding: '2%',
+        MssInput_MssOutput: {
+            border: '1px solid #ccc',
+            background: '#fff',
+            fontSize: '1em'
+        },
+        MssInput: s.Size('100%', '44%')({
+            background: '#F5F2F0'
+        }),
+        ParseHint: s.Size('100%', '2%')({
+            padding: '2%'
+        }),
+        MssOutput: s.Size('100%', '44%')({
+            background: '#F5F2F0'
+        })
+    }))
+}))
+
+```
 
