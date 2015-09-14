@@ -357,7 +357,7 @@ mss = {
 
 }
 
-if (typeof module? and module.exports)
+if module? and  module.exports?
     module.exports = mss
 else if (typeof define == "function" and define.amd)
     define () ->  mss

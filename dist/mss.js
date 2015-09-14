@@ -448,7 +448,7 @@
     ClearFix$: ClearFix$
   };
 
-  if (typeof (typeof module !== "undefined" && module !== null) && module.exports) {
+  if ((typeof module !== "undefined" && module !== null) && (module.exports != null)) {
     module.exports = mss;
   } else if (typeof define === "function" && define.amd) {
     define(function() {
