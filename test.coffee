@@ -75,3 +75,15 @@ test 'recursive parse', ->
                 margin: '2px'
         ' #foo{margin:2px;} #foo .Bar{padding:2px;}'
     )
+
+test 'array parse', ->
+    assert.deepEqual(
+        s.parse [
+                $Foo:
+                    color: 'red'
+            ,
+                Bar:
+                    padding:'2px'
+            ]
+        ' #foo{color:red;} .Bar{padding:2px;}'
+    )

@@ -3,7 +3,8 @@
 #########################################  #   #   #    ########
 
 # load a css string to DOM(with id is optional), return the style element
-tag = (cssText, id) ->
+tag = (mss, id) ->
+    cssText = parse mss
     styleEl = document.createElement 'style'
     if id then styleEl.id = id
     styleEl.type = 'text/css'
@@ -19,11 +20,12 @@ tag = (cssText, id) ->
     styleEl
 
 # reload a css string to a style element
-reTag = (cssText, styleEl) ->
+reTag = (mss, styleEl) ->
+    cssText = parse mss
     if isIeLessThan9
-        styleEl.styleSheet.cssText = cssText
-    else
         styleEl.childNodes[0].textContent = cssText
+    else
+        styleEl.styleSheet.cssText = cssText
     styleEl
 
 # unload a style element from DOM
@@ -42,6 +44,15 @@ isIeLessThan9 = ->
 
 # recursive parser
 parseR = (selectors, mss, indent, lineEnd) ->
+
+    # merge mss if was an Array
+    if mss instanceof Array
+        mergedMss = {}
+        for mssObj in mss
+            for k, v of mssObj
+                mergedMss[k] = v
+        mss = mergedMss
+
     cssRule = ''
     subCssRule = ''
     newSelectors = undefined
@@ -58,10 +69,12 @@ parseR = (selectors, mss, indent, lineEnd) ->
             if typeof val is "object"
                 # for the spirit of list monad, let's expand!
                 subSelectors = parseSelectors key
-                newSelectors =
-                    [ "#{sel}#{subSel}" for sel in selectors for subSel in subSelectors ]
-                subCssRule += parseR newSelectors, val, indent, lineEnd
-            else
+                newSelectors = do ->
+                    res = []
+                    res.push "#{sel}#{subSel}" for sel in selectors for subSel in subSelectors
+                    res
+                subCssRule += parseR(newSelectors, val, indent, lineEnd)
+            else if val?
                 cssRule += "#{indent}#{parsePropName key}:#{val};#{lineEnd}"
 
     (if cssRule != ''
@@ -73,30 +86,19 @@ parse = (mss, pretty = false) ->
     indent = parseR [''], mss, (if pretty then '  ' else ''), (if pretty then '\n' else '')
 
 # selector parsing rules (* stand for space):
-# &fooBar -> continue parse fooBar    => continue parse and directly concated with parent selector
-# fooBar  -> *.fooBar                   => class selector
-# FooBar  -> *fooBar                    => html tags
-# $fooBar -> :fooBar                    => shorthand pesudo class/element
-# $FooBar -> *#fooBar                   => id selector
+# FooBar  -> *.FooBar                   => class selector
+# $FooBar -> #fooBar                    => id selector
+# $hover -> :hover                      => shorthand pesudo class/element
+# fooBar  -> *fooBar                    => html tags, custom selector
+
 parseSelectors = (selectorString) ->
     selectors = selectorString.split '_'
     for sel in selectors
-        nest = ' '
-        if (firstChar = sel[0]) == '&'                         # direct concat selector
-            sel = sel.slice 1
-            nest = ''
-        switch true
-            when firstChar == '$'
-                if 'a' <= sel[1] <= 'z'                             # $hover -> :hover
-                    ':' + sel.slice 1
-                else if 'A' <= sel[1] <= 'Z'
-                    nest + '#' + sel[1].toLowerCase() + sel.slice 2    # $FooBar -> #fooBar
-            when 'A' <= firstChar <= 'Z'                              # Foobar -> ' .Foobar'
-                nest + '.' + sel
-            when 'a' <= firstChar <= 'z'                              # img -> ' img'
-                nest + firstChar.toLowerCase() + sel.slice 1
-            else                                                      # do nothing if dont recognize
-                nest + sel
+        if 'A' <= sel[0] <= 'Z' then ' .' + sel
+        else if sel[0] == '$'
+            if 'A' <= sel[1] <= 'Z' then ' #' + sel[1].toLowerCase() + sel[2..]
+            else ':' + sel[1..]
+        else ' ' + sel
 
 # prop name parsing rules:
 # marginLeft -> margin-left
@@ -148,12 +150,6 @@ pc = ->
 gold = (v) -> Math.round v*0.618
 goldR = (v) -> Math.round v/0.618
 
-# background image
-bgi = (imgURL, position = CENTER, repeat = 'no-repeat', attachment, clip) ->
-    "url(#imgURL) position repeat" +
-    (if attachment then attachment else '') +
-    (if clip then clip else '')
-
 # rgb color
 rgb = (r, g, b) -> "rgb(#{r},#{g},#{b})"
 
@@ -186,7 +182,16 @@ repeatGrad = (sideOrAngle, stops) ->
 # method start with UpperCase -> mixins      # # # #    ########
 #########################################  #   #   #    ########
 
-# aka overload, didnt serve as a base function for performance concerns
+# vendor prefix a prop
+Vendor = (prop) -> (mss) ->
+    if (v = mss[prop])?
+        PropBase = prop[0].toUpperCase() + prop.slice 1
+        mss[ 'Moz' + PropBase ]    = v
+        mss[ 'Webkit' + PropBase ] = v
+        mss[ 'Ms' + PropBase ]     = v
+    mss
+
+# didnt serve as a base function for performance concerns
 Mixin = (mssMix) -> (mss) ->
     for k, v of mssMix
         mss[k] = v
@@ -215,52 +220,24 @@ PosRel = (top, right, bottom, left) -> (mss) ->
     if left?   then mss.left = left
     mss
 
-###
-# transistion shorthand with default value
-# type cant be :
-#
-# @param prop {String}
-# @param time {String}
-# @param type {String}
-# @param delay {String}
-# @return {mss}
-###
-Transit = (prop, time, type = 'ease', delay = '0s') -> (mss) ->
-    mss.transition = "#prop #time #type #delay"
-    mss
-
-# inline block with float extension and ie fix
-InlineBlock = (directions = 'left') -> (mss) ->
-    mss.display = 'inline-block'
-    mss.float = directions
-    mss['*zoom'] = 1
-    mss['*display'] = 'inline'
-    mss
-
-# vertical align a line
+# vertical align a line, set height, lineHeight and fontSize at the same time
 LineSize = (lineHeight, fontS) -> (mss) ->
-    mss.verticalAlign = 'middle'
     if lineHeight?
         mss.height = mss.lineHeight = lineHeight
     if fontS?
         mss.fontSize = fontS
     mss
 
-# set hover color with cursor to pointer
-HoverBtn = ( textcolor, bgcolor, cur = 'pointer' ) -> (mss) ->
-    unless mss.$hover? then mss.$hover = {}
-    mss.$hover.cursor = cur
-    if textcolor then mss.$hover.color = textcolor
-    if bgcolor then mss.$hover.background = bgcolor
-    mss
+# touch scroll
+TouchScroll = (x) -> (mss) ->
+    if x
+        mss.overflowX = 'scroll'
+    else
+        mss.overflowY = 'scroll'
 
-# vendor prefix a prop
-Vendor = (prop) -> (mss) ->
-    if (v = mss[prop])?
-        PropBase = prop[0].toUpperCase() + prop.slice 1
-        mss[ 'Moz' + PropBase ]    = v
-        mss[ 'Webkit' + PropBase ] = v
-        mss[ 'Ms' + PropBase ]     = v
+    mss.overflowScrolling = 'touch'
+    mss.WebkitOverflowScrolling = 'touch'
+    mss.MozOverflowScrolling = 'touch'
     mss
 
 # css3 animate
@@ -270,6 +247,41 @@ Animate = (name, time, type = 'linear', delay = '0s', iter = 1, direction, fill,
         (if fill? then fill else '') +
         (if state? then state else '')
     mss
+
+# wrap a mss object into a MEDIA query, example:
+# MediaQuery
+#   all:
+#     maxWidth: '1200px'
+#   _handheld:
+#     minWidth: '700px'
+#   $tv:
+#     color: void
+#
+# ...
+
+MediaQuery = (queryObj) -> (mss) ->
+    queryStrArr = for mediaType, queryRules of queryObj
+        if mediaType[0] == '_' then mediaType = 'not ' + mediaType.slice 1
+        if mediaType[0] == '$' then mediaType = 'only ' + mediaType.slice 1
+        if queryRules
+            mediaType + ' and ' +
+            (for k, v of queryRules
+                '(' + (parsePropName k) +
+                (if v then ':' + v else '') + ')'
+            ).join ' and '
+        else mediaType
+    "@media #{queryStrArr.join ','}": mss
+
+# better normalized KeyFrames
+KeyFrames = (name) -> (mss) ->
+    keyFramesObj = {}
+    max = 0
+    for k of mss
+        max = Math.max max, Number.parseFloat k
+    for k, v of mss
+        keyFramesObj[ (Number.parseFloat k)*100/max + '%' ] = v
+
+    "@keyframes #{name}": keyFramesObj
 
 #########################################      #   #    ########
 # mixins end with $ dont need arguments #    # # # #    ########
@@ -296,46 +308,58 @@ ClearFix$ = (mss) ->
 # UPPERCASE -> BOMBs, use with CAUTIONs!     # # # #    ########
 #########################################  #   #   #    ########
 
-
-# wrap a mss object into a MEDIA query, example:
-# MediaQuery
-#   all:
-#     maxWidth: '1200px'
-#   _handheld:
-#     minWidth: '700px'
-#   $tv:
-#     color: void
-#
-# ...
-#
-MediaQuery = (queryObj) -> (mss) ->
-    queryStrArr = for mediaType, queryRules of queryObj
-        if mediaType[0] == '_' then mediaType = 'not ' + mediaType.slice 1
-        if mediaType[0] == '$' then mediaType = 'only ' + mediaType.slice 1
-        if queryRules
-            mediaType + ' and ' +
-            (for k, v of queryRules
-                '(' + (parsePropName k) +
-                (if v then ':' + v else '') + ')'
-            ).join ' and '
-        else mediaType
-    "@media #{queryStrArr.join ','}": mss
-
-# better normalized KeyFrames
-KeyFrames = (name) -> (mss) ->
-    keyFramesObj = {}
-    max = 0
-    for k of mss
-        max = Math.max max, Number.parseFloat k
+TRAVERSE = (mss, fn) ->
+    newMss = {}
     for k, v of mss
-        keyFramesObj[ (Number.parseFloat k)*100/max + '%' ] = v
+        newMss[k] = if typeof v is 'object' then (TRAVERSE v, fn) else (fn k, v)
 
-    "@keyframes #{name}": keyFramesObj
+mss = {
+    tag
+    reTag
+    unTag
 
-module.exports =
-    parse:             parse
-    tag:               tag
-    parseSelectors:    parseSelectors
-    parsePropName:     parsePropName
+    parse
+    parseSelectors
+    parsePropName
 
+    num
+    unit
+    px
+    pc
 
+    gold
+    goldR
+
+    rgb
+    bw
+    rgba
+    hsla
+
+    linearGrad
+    radialGrad
+    repeatGrad
+
+    Vendor
+    Mixin
+    Size
+    PosAbs
+    PosRel
+
+    LineSize
+    TouchScroll
+
+    Animate
+    MediaQuery
+    KeyFrames
+
+    TextEllip$
+    ClearFix$
+
+}
+
+if (typeof module? and module.exports)
+    module.exports = mss
+else if (typeof define == "function" and define.amd)
+    define () ->  mss
+else if window?
+    window.mss = mss
