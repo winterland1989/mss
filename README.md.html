@@ -396,16 +396,17 @@ There're two very special Mixins that can be used as example show mss turn `@` r
 mss
 
 ```coffee
-myMedia = mss.MediaQuery(
+mss.MediaQuery(
         all:
            maxWidth: '1200px'
         _handheld:
            minWidth: '700px'
         $tv:
            color: '#red'
-    )
+    )(
         Content: 
             width: '960px'
+    )
 
 ```
 
@@ -419,7 +420,49 @@ css
 }
 ```
 
-The rules of `MediaQuery` is: use `_` for `not` and `$` for `only`, that's all. We got `KeyFrames` too:
+The rules of `MediaQuery` is: use `_` for `not` and `$` for `only`, that's all, Let's check if it compose:
+
+mss
+
+    myMedia = mss.MediaQuery(
+        all:
+           maxWidth: '1200px'
+        _handheld:
+           minWidth: '700px'
+        $tv:
+           color: '#red'
+    )
+   
+    childrenMss = myMedia 
+        Foo:
+            margin: '2px'
+            $hover:
+                color: '#fff'
+
+    Foo: [
+            Bar:
+                padding: '2px'
+        ,   
+            childrenMss
+        ]
+
+css
+
+    .Foo .Bar{
+        padding:2px;
+    }
+    @media all and (max-width:1200px),not handheld and (min-width:700px),only tv and (color:#red){
+        .Foo{
+            margin:2px;
+        }
+        .Foo:hover{
+            color:#fff;
+        }
+    }
+
+Nice! The `@` rules in one child mss will be float to the global scope while not affecting the parent's other children at all, so you can safely add MediaQuery anywhere you want inside mss, the parse will handle all the rest.
+
+We got a similar `KeyFrames` too:
 
 mss
 
@@ -450,7 +493,56 @@ css
 }
 ```
 
-The keys are numbers that will be normalized to pencentage, so you can just write them in proportion.
+The keys are numbers that will be normalized to pencentage, so you can just write them in proportion. Note there's one thing to be taken care of, `KeyFrames` don't have local namespace, it's a design of css not mss, so you have to make sure the animation name is unique in the mss tree, let's check it out:
+
+mss
+
+```coffee
+myAnima = mss.KeyFrames('myKeyFrameAnima') # this name has to be unique!
+
+childrenAnima = myAnima
+
+    10: 
+        top: '20px'
+    20:
+        top: '40px'
+    30:
+        top: '50px'
+
+Foo: [
+        Bar:
+            padding: '2px'
+    ,
+        Dialog: [
+                background: '#fff'
+            ,    
+                childrenAnima
+            ]
+    ]
+    
+```
+
+css
+
+```css
+.Foo .Bar{
+    padding:2px;
+}
+.Foo .Dialog{
+    background:#fff;
+}
+@keyframes myKeyFrameAnima{
+    33.333333333333336%{
+        top:20px;
+    }
+    66.66666666666667%{
+        top:40px;
+    }
+    100%{
+        top:50px;
+    }
+}
+```
 
 Other functions
 ---------------
