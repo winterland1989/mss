@@ -121,9 +121,9 @@ css
 mss
 
     BlueBird_BlueOcean:
-        color: \blue
+        color: 'blue'
         RedText_$RedWine_span:
-            color: \red
+            color: 'red'
 
 css
 
@@ -148,7 +148,7 @@ Rules for parsing a mss property name
 mss
 
     FooBar:
-        marginLeft: \50%
+        marginLeft: '50%'
         MozBoxShadow: '10px 10px 5px #888888'
 
 css
