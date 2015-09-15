@@ -1,7 +1,7 @@
 MSS: messed up style sheet
 ==========================
 
-Write modular, composable CSS in a functional way with pure javascript.  Check out the [online compiler](http://winterland1989.github.io/mss).
+Write modular, composable CSS in a functional way with pure javascript.
 
 Intro
 -----
@@ -17,7 +17,8 @@ MSS.parse takes a mss object as input and output a css string
 Let's see an example:
 
 ```javascript
-mss = {
+var s = require('mss.js'); 
+var myStyle = {
   FooClass: {
     zIndex: 999,
     $BarId_AnotherClass: {
@@ -32,7 +33,7 @@ mss = {
 };
 
 // set second argmument to true to enable prettify
-console.log(MSS.parse(mss, true));
+console.log(s.parse(myStyle, true));
 
 ```
 
@@ -59,7 +60,8 @@ As shown above, the selectors and prop name are converted for the writing ease i
 As a coffeescript user, i would write former example in coffeescript:
 
 ```coffee
-mss =
+s = require 'mss'
+myStyle =
     FooClass:
         zIndex: 999
         $BarId_AnotherClass:
@@ -69,7 +71,7 @@ mss =
                 padding: '12px'
                 width: '100%'   
                 
-console.log MSS.parse(mss, true)
+console.log MSS.parse(myStyle, true)
 ```
 
 Much nicer! For the sake of clearity, following example will be written in coffee, really sorry for the inconveince, but coffeescript's object literal is very easy to read. Let's explain how mss translate your plain object into a css string in detail:
