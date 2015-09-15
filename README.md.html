@@ -122,7 +122,7 @@ mss
 
     BlueBird_BlueOcean:
         color: \blue
-        RedText_$RedWine_Span:
+        RedText_$RedWine_span:
             color: \red
 
 css
@@ -167,7 +167,7 @@ mss
 
     otherMss =
         OtherWidget:
-                margin: '2px'
+            margin: '2px'
 
     Foo: [
             padding: '10px'
@@ -209,7 +209,7 @@ css
 Functions and Mixins
 --------------------
 
-Here comes the fun part, since the plain mss object you write is actual a simplified CSS AST, so all functions and mixins can be write in plain javascript.
+Here comes the fun part, since the plain mss object you write is actual a simplified CSS AST, so all functions and mixins can be written in plain javascript.
 
 Functions
 ---------
@@ -228,8 +228,8 @@ mss
 css
 
     #ohMyGod {
-        margin: 2px 4px 5px;
-        padding 10% 10%;
+        margin: 2px;
+        padding 10%;
     }
  
 There's some functions built-in with mss, they are written in camelCase, such as `px` or `hsl`, and often they are quite general, for example the built-in `px` function can take multiple arguments, here's built-in list:
@@ -277,7 +277,7 @@ css
         text-align: 'center';
     }
 
-The mixins are totally composable because they have the same type: take a mss, return a modified mss back, notice how the coffeescript shine here, if you choose to write javascript, you have to take care of the nest function application carefully:
+The mixins are totally composable because they have the same type: take a mss, return a modified mss back, notice how the coffeescript shines here, if you choose to write javascript, you have to take care of the nest function application carefully:
 
 ```javascript
 
@@ -343,7 +343,7 @@ Foo:
     left: 0
     otherProp: '...'
 
-# Same as PosAbs
+# PosRel is just the same with PosAbs, except the position is set to 'relative'
 Foo: PosRel('10px', '10px', 0)
     otherProp: '...' 
 
@@ -374,7 +374,7 @@ Foo:
     textOverflow = 'ellipsis'
     otherProp: '...'
 
-# ClearFix$, well... just classic ClearFix
+# ClearFix$, well... just the classic ClearFix
 Foo: ClearFix$
     otherProp: '...' 
 
@@ -478,6 +478,7 @@ propFn = (propName, propValue) ->
     else propValue
 
 TRAVERSE(originMss, mssFn, propFn) ==
+
     Foo:
         p:
             otherProp: '...'
@@ -501,14 +502,14 @@ myStyle =
     body:
         width: '640px'
 
-console.log(s.parse(myStyle))         # parse a mss object into a string.
-console.log(s.parse(myStyle, true))   # parse a mss object into a string with prettify.
+console.log(s.parse(myStyle))        # parse a mss object into a string.
+console.log(s.parse(myStyle, true))  # parse a mss object into a string with prettify.
 
-styleTag = s.tag(myStyle)             # insert the style to <head>, return the <style> tag's node.
-styleTag = s.tag(myStyle, 'myStyle')  # insert the style to <head> with id=myStyle, return tag's node.
+styleTag = s.tag(myStyle)            # insert the style to <head>, return the <style> tag's node.
+styleTag = s.tag(myStyle, 'myStyle') # insert the style to <head> with id=myStyle, return tag's node.
 
-s.retag(myStyle2, styleTag)           # update the styleTag node's style with new mss object
-s.unTag(styleTag)                     # remove the styleTag node
+s.retag(myStyle2, styleTag)          # update the styleTag node's style with new mss object
+s.unTag(styleTag)                    # remove the styleTag node
 ```
 
 Use mss with some declarative ui frameworks such as [React](https://facebook.github.io/react/) [mithril](https://github.com/lhorie/mithril.js) or [mecury](https://github.com/Raynos/mercury) to keep web component modular and composable, the basic idea is that a component should manage its own DOM and CSS, and since mss is just plain object or array of objects, it's trivial to nest small component into larger one.
