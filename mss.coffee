@@ -1,8 +1,18 @@
 #########################################      #   #    ########
+#-jsm-keywords: style DSL        ########    # # # #    ########
+#########################################  #   #   #    ########
+
+#########################################      #   #    ########
 # helper to add style to browser ########    # # # #    ########
 #########################################  #   #   #    ########
 
+###
 # load a css string to DOM(with id is optional), return the style element
+#
+# @param mss {mssObject}
+# @param id {String}
+# @return {DOMNode}
+###
 tag = (mss, id) ->
     cssText = parse mss
     styleEl = document.createElement 'style'
@@ -19,7 +29,13 @@ tag = (mss, id) ->
     document.head.appendChild styleEl
     styleEl
 
+###
 # reload a css string to a style element
+#
+# @param mss {mssObject}
+# @param styeEl {DOMNode}
+# @return {DOMNode}
+###
 reTag = (mss, styleEl) ->
     cssText = parse mss
     if isIeLessThan9
@@ -28,11 +44,20 @@ reTag = (mss, styleEl) ->
         styleEl.styleSheet.cssText = cssText
     styleEl
 
+###
 # unload a style element from DOM
+#
+# @param styleEl {DOMNode}
+# @return {undefined}
+###
 unTag = (styleEl) ->
     if styleEl then document.head.removeChild styleEl
 
+###
 # check IE version
+#
+# @return {Boolean}
+###
 isIeLessThan9 = ->
     div = document.createElement 'div'
     div.innerHTML = "<!--[if lt IE 9]><i></i><![endif]-->"
@@ -42,7 +67,15 @@ isIeLessThan9 = ->
 # let's rock ############################    # # # #    ########
 #########################################  #   #   #    ########
 
+###
 # recursive parser
+#
+# @param selectors {[String]}
+# @param mss {mssObj}
+# @param indent {'    ' | '  ' | ''}
+# @param lineEnd {'\n' | ''}
+# @return {String}
+###
 parseR = (selectors, mss, indent, lineEnd) ->
 
     # merge mss if was an Array
@@ -81,7 +114,13 @@ parseR = (selectors, mss, indent, lineEnd) ->
         "#{selectors.join ',' + lineEnd}{#{lineEnd}#{cssRule}}#{lineEnd}"
     else '') + subCssRule
 
+###
 # parse a mss object into raw css string
+#
+# @param mss {mssObject}
+# @param pretty {Boolean} default = false
+# @return {String}
+###
 parse = (mss, pretty = false) ->
     indent = parseR [''], mss, (if pretty then '  ' else ''), (if pretty then '\n' else '')
 
