@@ -1,6 +1,6 @@
 {
   "name": "mss-js",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "dependencies": {},
   "devDependencies": {
     "coffee-script": "^1.9.3"
