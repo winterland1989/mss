@@ -1,7 +1,17 @@
 MSS: messed up style sheet
 ==========================
 
-Write modular, composable CSS in a functional way with pure javascript.  Check out the [online compiler](http://winterland1989.github.io/mss).
+Write modular, composable CSS in a functional way with pure javascript.  
+
++ Try mss with [online compiler](http://winterland1989.github.io/mss).
+
++ [Example with React, mithril](https://github.com/winterland1989/mss#applications).
+
++ usage:
+
+    + npm install mss-js and `var s = require('mss-js');`
+    + clone this repo and `var s = require('mss.js');`
+    + add a script tag and `var s = window.mss`
 
 Intro
 -----
@@ -55,9 +65,7 @@ will yield:
 }
 ```
 
-As shown above, the selectors and prop name are converted for the writing ease in Javascript(using valid variable as much as possible) 
-
-As a coffeescript user, i would write former example in coffeescript:
+As shown above, the selectors and prop name are converted for the writing ease in Javascript(using valid variable as much as possible). As a coffeescript user, i can write the example above like this:
 
 ```coffee
 s = require 'mss'
@@ -70,18 +78,16 @@ myStyle =
                 borderRadius: '12px'
                 padding: '12px'
                 width: '100%'   
-                
-console.log MSS.parse(myStyle, true)
 ```
 
-Much nicer! For the sake of clearity, following example will be written in coffee, really sorry for the inconveince, but coffeescript's object literal is very easy to read. Let's explain how mss translate your plain object into a css string in detail:
+Much nicer! Following example will be written in coffee, really sorry for the inconveince, but coffeescript's object literal is much nicer to read and write.
 
 Rules for parsing a mss selectors
 ---------------------------------
 
-+ Class selector is written in UpperCase and keep UpperCase
-+ html tag selector is written in lowerCase and keep lowerCase
-+ id selector is written in $UpperCase and turn into lowerCase
++ Class selector is written in `UpperCase` and turn to `.UpperCase`.
++ html tag selector is written in `lowerCase` and turn to `#lowerCase`.
++ id selector is written in `$UpperCase` and turn to `lowerCase`.
 
 mss
 
@@ -102,7 +108,7 @@ css
 
     #index { margin: ...}
 
-+ `$` used to write pesudo-class selector:
++ `$` is used to write pesudo-class selector:
 
 mss
 
@@ -208,10 +214,6 @@ css
 
 mss
 
-    '@media all and (max-width:1200px)':
-       Content:
-          width: '960px'
-
     Foo:
       padding: '0px'
       '@media all and (max-width:1200px)':
@@ -220,11 +222,6 @@ mss
 
 css
 
-    @media all and (max-width:1200px){
-         .Content{
-            width:960px;
-        }
-    }
     .Foo{
             padding:0px;
     }
@@ -242,7 +239,7 @@ Here comes the fun part, since the plain mss object you write is actual a simpli
 Functions
 ---------
 
-Since all property are strings, we can write a function to help us convert between numbers and string, for example:
+Since all property are strings, we can write functions to help us produce property string, for example:
 
 mss
 
@@ -293,7 +290,6 @@ mss
         mss.padding = pad
         mss
 
-
     input: Center$ Padding('2px')
         margin: 0
 
@@ -305,7 +301,7 @@ css
         text-align: 'center';
     }
 
-The mixins are totally composable because they have the same type: take a mss, return a modified mss back, notice how the coffeescript shines here, if you choose to write javascript, you have to take care of the nest function application carefully:
+The mixins are totally composable because they have same type: take a mss, return a modified mss back, if you choose to write javascript, take care of the nest function application carefully:
 
 ```javascript
 
@@ -448,7 +444,7 @@ css
 }
 ```
 
-The rules of `MediaQuery` is: use `_` for `not` and `$` for `only`, that's all. We got a similar `KeyFrames` too:
+The rules for `MediaQuery` is: use `_` for `not` and `$` for `only`, that's all. We got a similar `KeyFrames` too:
 
 mss
 
@@ -481,12 +477,12 @@ css
 
 The keys are numbers that will be normalized to pencentage, so you can just write them in proportion.
 
-Note there's one thing to be taken care of, `@rules` don't have local namespace, it's a design of css not mss, so you have to make sure the namespace is not used, eg. animation name, selectors inside media query are unique in the same mss tree.
+Note there's one thing to be taken care of, `@rules` don't have local namespace, it's a design of css not mss, so make sure the namespace is not used, eg. animation names, selectors inside media query are unique in the same mss tree.
 
 Other functions
 ---------------
 
-You can define other functions to achieve more powerful effect easily based on mss's nested object presentation, here comes a simple built-in function `TRAVERSE`, it's UPPER_CASE to distinguish from functions and mixins, it can be used in some interesting situations such as substitute all static assets' url.
+You can define other functions to achieve more interesting effect easily based on mss's nested object presentation, here's a simple built-in function `TRAVERSE`, it's `UPPER_CASE` to distinguish from functions and mixins, it can be used in some interesting situations such as substitute all static assets' url.
 
 ```coffee
 originMss =
@@ -533,19 +529,72 @@ myStyle =
     body:
         width: '640px'
 
-console.log(s.parse(myStyle))        # parse a mss object into a string.
-console.log(s.parse(myStyle, true))  # parse a mss object into a string with prettify.
+# parse a mss object into a string.
+console.log(s.parse(myStyle))      
+# parse a mss object into a string with prettify.
+console.log(s.parse(myStyle, true))
 
-styleTag = s.tag(myStyle)            # insert the style to <head>, return the <style> tag's node.
-styleTag = s.tag(myStyle, 'myStyle') # insert the style to <head> with id=myStyle, return tag's node.
+# insert the style to <head>, return the <style> tag's node.
+styleTag = s.tag(myStyle)            
+# insert the style to <head> with id=myStyle, return tag's node.
+styleTag = s.tag(myStyle, 'myStyle')
 
-s.retag(myStyle2, styleTag)          # update the styleTag node's style with new mss object
-s.unTag(styleTag)                    # remove the styleTag node
+# update the styleTag node's style with new mss object
+s.retag(myStyle2, styleTag)          
+# remove the styleTag node
+s.unTag(styleTag)                    
 ```
 
 Use mss with some declarative ui frameworks such as [React](https://facebook.github.io/react/) [mithril](https://github.com/lhorie/mithril.js) or [mecury](https://github.com/Raynos/mercury) to keep web component modular and composable, the basic idea is that a component should manage its own DOM and CSS, and since mss is just plain object or array of objects, it's trivial to nest small component into larger one.
 
-An easy way to do this is providing a function for mss along aside your DOM templete, and call children's mss function inside the parent one just like how you compose the DOM, take following `Dialog` written using [mithril](https://github.com/lhorie/mithril.js) as an example:
+An easy way to do this is providing a function for mss along aside your DOM templete, and call children's mss function inside the parent one just like how you compose the DOM, take following `Dialog` written using [React](https://facebook.github.io/react/) as an example:
+
+```js
+var react = require('React');
+var Dialog = react.createClass({
+    initState: ...
+,   render: function(){
+        return
+            <div className="Dialog">...</div>
+    }
+});
+
+Dialog.mss = function(bgColor){
+    return {
+        Dialog:{
+            background: color
+        }
+    }
+};
+```
+
+You can easily embed it into another `BiggerDialog`:
+
+```coffee
+var BiggerDialog =  react.createClass({
+    initState:...
+,   render: function(){
+        return
+            <div className="BiggerDialog">
+                <Dialog ... />
+                ...
+            </div>
+    }
+});
+
+BiggerDialog.mss = function(bgColor, childDialogBgColor){
+    return {
+        BiggerDialog: [
+            background: color
+            ...
+        ,   
+            Dialog.mss(childDialogBgColor)
+        ]
+    }
+};
+```
+
+We can do the similar thing with mithril, here's a version with [mithril](https://github.com/lhorie/mithril.js) and coffee(which i'm using everyday in my work):
 
 ```coffee
 class Dialog
@@ -556,11 +605,7 @@ class Dialog
 Dialog.mss = (bgColor) ->
     Dialog:
         background: color
-```
 
-You can easily embed it into another `BiggerDialog`:
-
-```coffee
 class BiggerDialog
     constructor:
         @childDialog = new Dialog(...)

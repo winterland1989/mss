@@ -1,10 +1,30 @@
 {
-  "name": "mss",
+  "name": "mss-js",
   "version": "0.2.0",
   "private": true,
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "coffee-script": "^1.9.3"
-  }
+  },
+  "description": "MSS: messed up style sheet",
+  "main": "mss.js",
+  "scripts": {
+    "test": "coffee test.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/winterland1989/mss.git"
+  },
+  "keywords": [
+    "css",
+    "style",
+    "modular",
+    "composable"
+  ],
+  "author": "winterland",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/winterland1989/mss/issues"
+  },
+  "homepage": "https://github.com/winterland1989/mss#readme"
 }

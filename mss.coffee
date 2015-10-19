@@ -366,6 +366,6 @@ mss = {
 if module? and  module.exports?
     module.exports = mss
 else if (typeof define == "function" and define.amd)
-    define () ->  mss
+    define -> mss
 else if window?
     window.mss = mss
