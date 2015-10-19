@@ -1,7 +1,7 @@
 MSS: messed up style sheet
 ==========================
 
-Write modular, composable CSS in a functional way with pure javascript.  
+Write modular, composable CSS in a functional way with pure javascript.
 
 + Try mss with [online compiler](http://winterland1989.github.io/mss).
 
@@ -16,13 +16,13 @@ Write modular, composable CSS in a functional way with pure javascript.
 Intro
 -----
 
-MSS.parse takes a mss object as input and output a css string
+MSS.parse is a extremely small library to compile a javascript object to a css string.
 
-+ A mss object is a plain javascript object, usually nested
++ A input object is a plain javascript object, usually nested.
 
 + A key will be a CSS selector if its value is another mss object, otherwise it will be taken as a property name for CSS.
 
-+ MSS will parse the nested object into nested selectors by connnecting selectors into a descendant selector
++ MSS will parse the nested object into nested selectors by connnecting selectors into a descendant selector.
 
 Let's see an example:
 
@@ -44,6 +44,8 @@ var myStyle = {
 
 // set second argmument to true to enable prettify
 console.log(s.parse(myStyle, true));
+// insert the style into DOM's <head>
+s.tag(myStyle)
 
 ```
 
@@ -585,13 +587,24 @@ var BiggerDialog =  react.createClass({
 BiggerDialog.mss = function(bgColor, childDialogBgColor){
     return {
         BiggerDialog: [
-            background: color
-            ...
-        ,   
-            Dialog.mss(childDialogBgColor)
+            {
+                background: color
+            ,   ...
+            }
+        ,   ...
+        ,   Dialog.mss(childDialogBgColor)
         ]
     }
 };
+```
+
+At the top level, insert style into DOM using `tag`, remember to **insert style before inserting any template**, so the screen won't flash:
+
+```
+var s = require('mss.js');
+s.tag(BiggerDialog.mss('red', 'green'));
+
+react.render(BiggerDialog, document.body);
 ```
 
 We can do the similar thing with mithril, here's a version with [mithril](https://github.com/lhorie/mithril.js) and coffee(which i'm using everyday in my work):
