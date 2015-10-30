@@ -5,7 +5,9 @@ Write modular, composable CSS in a functional way with pure javascript.
 
 + Try mss with [online compiler](http://winterland1989.github.io/mss).
 
-+ [Example with React, mithril](https://github.com/winterland1989/mss#applications).
++ [Demo with react and jsx](https://jsbin.com/diwomeyewe/2/edit?js,output)
+
++ [Guide to using with React, mithril](https://github.com/winterland1989/mss#applications).
 
 + usage:
 
@@ -551,20 +553,21 @@ Use mss with some declarative ui frameworks such as [React](https://facebook.git
 
 An easy way to do this is providing a function for mss along aside your DOM templete, and call children's mss function inside the parent one just like how you compose the DOM, take following `Dialog` written using [React](https://facebook.github.io/react/) as an example:
 
-```js
+```jsx
 var react = require('React');
 var Dialog = react.createClass({
     initState: ...
 ,   render: function(){
-        return
+        return (
             <div className="Dialog">...</div>
+        )
     }
 });
 
 Dialog.mss = function(bgColor){
     return {
         Dialog:{
-            background: color
+            background: bgColor
         }
     }
 };
@@ -572,15 +575,16 @@ Dialog.mss = function(bgColor){
 
 You can easily embed it into another `BiggerDialog`:
 
-```coffee
+```jsx
 var BiggerDialog =  react.createClass({
     initState:...
 ,   render: function(){
-        return
+        return (
             <div className="BiggerDialog">
                 <Dialog ... />
                 ...
             </div>
+        )
     }
 });
 
@@ -588,7 +592,7 @@ BiggerDialog.mss = function(bgColor, childDialogBgColor){
     return {
         BiggerDialog: [
             {
-                background: color
+                background: bgColor
             ,   ...
             }
         ,   ...
