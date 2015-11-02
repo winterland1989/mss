@@ -77,15 +77,6 @@ isIeLessThan9 = ->
 # @return {String}
 ###
 parseR = (selectors, mss, indent, lineEnd) ->
-
-    # merge mss if was an Array
-    if mss instanceof Array
-        mergedMss = {}
-        for mssObj in mss
-            for k, v of mssObj
-                mergedMss[k] = v
-        mss = mergedMss
-
     cssRule = ''
     subCssRule = ''
     newSelectors = undefined

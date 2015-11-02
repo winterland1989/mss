@@ -89,18 +89,7 @@
    */
 
   parseR = function(selectors, mss, indent, lineEnd) {
-    var cssRule, j, k, key, len, mergedMss, mssObj, newSelectors, subCssRule, subSelectors, v, val;
-    if (mss instanceof Array) {
-      mergedMss = {};
-      for (j = 0, len = mss.length; j < len; j++) {
-        mssObj = mss[j];
-        for (k in mssObj) {
-          v = mssObj[k];
-          mergedMss[k] = v;
-        }
-      }
-      mss = mergedMss;
-    }
+    var cssRule, key, newSelectors, subCssRule, subSelectors, val;
     cssRule = '';
     subCssRule = '';
     newSelectors = void 0;
@@ -116,12 +105,12 @@
         if (typeof val === "object") {
           subSelectors = parseSelectors(key);
           newSelectors = (function() {
-            var len1, len2, m, n, res, sel, subSel;
+            var j, len, len1, m, res, sel, subSel;
             res = [];
-            for (m = 0, len1 = subSelectors.length; m < len1; m++) {
-              subSel = subSelectors[m];
-              for (n = 0, len2 = selectors.length; n < len2; n++) {
-                sel = selectors[n];
+            for (j = 0, len = subSelectors.length; j < len; j++) {
+              subSel = subSelectors[j];
+              for (m = 0, len1 = selectors.length; m < len1; m++) {
+                sel = selectors[m];
                 res.push("" + sel + subSel);
               }
             }
