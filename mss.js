@@ -9,7 +9,7 @@
  */
 
 (function() {
-  var ClearFix$, KeyFrames, LineSize, MediaQuery, Mixin, PosAbs, PosRel, Size, TRAVERSE, TextEllip$, Vendor, bw, gold, goldR, hsl, hsla, isIeLessThan9, mss, num, parse, parsePropName, parseR, parseSelectors, pc, px, reTag, rgb, rgba, tag, unTag, unit;
+  var ClearFix$, KeyFrames, LineSize, MediaQuery, Mixin, PosAbs, PosRel, Size, TRAVERSE, TextEllip$, Vendor, bw, gold, goldR, hsl, hsla, isIeLessThan9, merge, mss, num, parse, parsePropName, parseR, parseSelectors, pc, px, reTag, rgb, rgba, tag, unTag, unit;
 
   tag = function(mss, id) {
     var cssText, styleEl;
@@ -251,6 +251,19 @@
     return "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
   };
 
+  merge = function(msses) {
+    var j, k, len, mss, result, v;
+    result = {};
+    for (j = 0, len = msses.length; j < len; j++) {
+      mss = msses[j];
+      for (k in mss) {
+        v = mss[k];
+        result[k] = v;
+      }
+    }
+    return result;
+  };
+
   Vendor = function(prop) {
     return function(mss) {
       var PropBase, v;
@@ -452,6 +465,7 @@
     rgba: rgba,
     hsl: hsl,
     hsla: hsla,
+    merge: merge,
     Vendor: Vendor,
     Mixin: Mixin,
     Size: Size,

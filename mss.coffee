@@ -204,6 +204,12 @@ hsl = (h, s, l) -> "hsl(#{h},#{s}%,#{l}%)"
 # hsla color, hue: 0~360, saturation: 0~100, lightness: 0~100, alpha: 0.0~1.0
 hsla = (r, g, b, a) -> "hsla(#{h},#{s}%,#{l}%,#{a})"
 
+merge = (msses) ->
+    result = {}
+    for mss in msses
+        for k, v of mss
+            result[k] = v
+    result
 
 #########################################      #   #    ########
 # method start with UpperCase -> mixins      # # # #    ########
@@ -346,6 +352,8 @@ mss = {
     rgba
     hsl
     hsla
+
+    merge
 
     Vendor
     Mixin

@@ -17,6 +17,8 @@ Write modular, composable CSS in a functional way with pure javascript.
     + clone this repo and `var s = require('mss.js');`
     + add a script tag and `var s = window.mss`
 
++ [Changelog](#Changelog)
+
 Intro
 -----
 
@@ -173,7 +175,7 @@ css
 Notes
 -----
 
-+ You can use an array of mss as a mss object, and mss will merge all the elements first(from the first to last order, so the last one with the hightest precedence), this's very handy when you want to compose nested mss.
++ You can use `mss.merge` to merge an array of mss into a single mss object, it will merge all the elements from the first to last order, so the last one comes with the hightest precedence, this's very handy when you want to compose nested mss.
 
 mss
 
@@ -181,7 +183,7 @@ mss
         OtherWidget:
             margin: '2px'
 
-    Foo: [
+    Foo: mss.merge [
             padding: '10px'
             Bar:
                 color: '#ddd'
@@ -592,14 +594,14 @@ var BiggerDialog =  react.createClass({
 
 BiggerDialog.mss = function(bgColor, childDialogBgColor){
     return {
-        BiggerDialog: [
+        BiggerDialog: m.merge([
             {
                 background: bgColor
             ,   ...
             }
         ,   ...
         ,   Dialog.mss(childDialogBgColor)
-        ]
+        ])
     }
 };
 ```
@@ -629,7 +631,7 @@ class BiggerDialog
     constructor:
         @childDialog = new Dialog(...)
     view: ->
-        m '.BiggerDialog', [
+        m '.BiggerDialog', mss.merge [
                 childDialog.view()
             ,   
                 m '.OtherThings', '...'
@@ -776,3 +778,9 @@ $I: s.PosRel(0, 0)(s.Size('100%', '100%')({
 
 ```
 That'all, happy hacking!
+
+Changelog
+=========
+
+v0.3.0
+change array behavior, now please use `mss.merge` to merge multiple objects.

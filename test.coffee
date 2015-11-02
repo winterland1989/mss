@@ -1,5 +1,5 @@
 assert = require 'assert'
-s = require './mss'
+s = require './mss.coffee'
 
 {log, error: err} = console
 test = (desc, t) ->
@@ -76,9 +76,9 @@ test 'recursive parse', ->
         ' #foo{margin:2px;} #foo .Bar{padding:2px;}'
     )
 
-test 'array parse', ->
+test 'mss.merge', ->
     assert.deepEqual(
-        s.parse [
+        s.parse s.merge [
                 $Foo:
                     color: 'red'
             ,
