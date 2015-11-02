@@ -17,7 +17,7 @@ Write modular, composable CSS in a functional way with pure javascript.
     + clone this repo and `var s = require('mss.js');`
     + add a script tag and `var s = window.mss`
 
-+ [Changelog](#Changelog)
++ [Changelog](#changelog)
 
 Intro
 -----
