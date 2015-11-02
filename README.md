@@ -5,9 +5,9 @@ Write modular, composable CSS in a functional way with pure javascript.
 
 + Try mss with [online compiler](http://winterland1989.github.io/mss).
 
-+ [Demo with react.js and jsx](https://jsbin.com/diwomeyewe/2/edit?js,output)
++ [Demo with react.js and jsx](https://jsbin.com/zoqivogila/1/edit?js,output)
 
-+ [Demo with mithril.js and coffee](https://jsbin.com/qiqovuyice/1/edit?html,js,output)
++ [Demo with mithril.js and coffee](https://jsbin.com/gepinecigi/1/edit?js,output)
 
 + [Guide to using with React, mithril](https://github.com/winterland1989/mss#applications).
 
