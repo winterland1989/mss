@@ -195,11 +195,14 @@ hsl = (h, s, l) -> "hsl(#{h},#{s}%,#{l}%)"
 # hsla color, hue: 0~360, saturation: 0~100, lightness: 0~100, alpha: 0.0~1.0
 hsla = (r, g, b, a) -> "hsla(#{h},#{s}%,#{l}%,#{a})"
 
+# deep merge objects in array, from first to last
 merge = (msses) ->
     result = {}
     for mss in msses
         for k, v of mss
-            result[k] = v
+            if typeof v == 'object' and typeof result[k] == 'object'
+                result[k] = merge [result[k], v]
+            else result[k] = v
     result
 
 #########################################      #   #    ########

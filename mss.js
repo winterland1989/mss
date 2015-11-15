@@ -247,7 +247,11 @@
       mss = msses[j];
       for (k in mss) {
         v = mss[k];
-        result[k] = v;
+        if (typeof v === 'object' && typeof result[k] === 'object') {
+          result[k] = merge([result[k], v]);
+        } else {
+          result[k] = v;
+        }
       }
     }
     return result;
