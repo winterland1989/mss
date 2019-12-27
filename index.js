@@ -23,11 +23,8 @@ marked.setOptions({
 
 m.request({
   url: 'README.md.html',
-  method: 'GET',
-  deserialize: function(data) {
-    return marked(data);
-  }
-}).then(function(html) {
+  method: 'GET'
+}).then(marked).then(function(html) {
   return docHTML = html;
 });
 
