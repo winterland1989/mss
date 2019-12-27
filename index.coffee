@@ -24,7 +24,7 @@ marked.setOptions highlight: (code) ->
 m.request(
     url: '://raw.githubusercontent.com/winterland1989/mss/gh-pages/README.md.html'
     method: 'GET'
-    deserialize: marked
+    extract: (xhr) -> marked xhr.response
 ).then (html) ->
     docHTML = html
 
