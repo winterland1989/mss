@@ -22,7 +22,7 @@ marked.setOptions({
 });
 
 m.request({
-  url: '://raw.githubusercontent.com/winterland1989/mss/gh-pages/README.md.html',
+  url: 'README.md.html',
   method: 'GET',
   extract: function(xhr) {
     return marked(xhr.response);

@@ -22,7 +22,7 @@ marked.setOptions highlight: (code) ->
     hljs.highlightAuto(code).value
 
 m.request(
-    url: '://raw.githubusercontent.com/winterland1989/mss/gh-pages/README.md.html'
+    url: 'README.md.html'
     method: 'GET'
     extract: (xhr) -> marked xhr.response
 ).then (html) ->
