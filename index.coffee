@@ -21,11 +21,11 @@ mssOutput = ''
 marked.setOptions highlight: (code) ->
     hljs.highlightAuto(code).value
 
-m.request
-    url: 'README.md.html'
+m.request(
+    url: '://raw.githubusercontent.com/winterland1989/mss/gh-pages/README.md.html'
     method: 'GET'
-.then(marked)
-.then (html) ->
+    deserialize: marked
+).then (html) ->
     docHTML = html
 
 onInputKeyDown = (e) ->
