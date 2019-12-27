@@ -1,3 +1,4 @@
+import CoffeeScript from './browser-compiler-modern/coffeescript.js'
 s = window.mss
 
 docHTML = '<h1>Loading...</h1>'
